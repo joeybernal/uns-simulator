@@ -4,11 +4,16 @@ version = "1.0.0"
 description = "Aurora Industries UNS Simulator — realistic factory data with fault injection"
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
     "paho-mqtt>=2.1.0",
     "python-dotenv>=1.0.0",
     "structlog>=24.1.0",
     "pyyaml>=6.0.1",
 ]
+
+[project.scripts]
+aurora-sim = "aurora_simulator:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
