@@ -24,8 +24,12 @@
         { "name": "MQTT_PORT",    "value": "1883" },
         { "name": "MQTT_USER",    "value": "admin" },
         { "name": "AURORA_PORT",  "value": "8081" },
-        { "name": "INFLUX_ORG",   "value": "iotauto" },
-        { "name": "INFLUX_BUCKET","value": "aurora" }
+        { "name": "INFLUX_ORG",    "value": "iotauto" },
+        { "name": "INFLUX_BUCKET", "value": "aurora" },
+        { "name": "TERMINUS_URL",  "value": "https://terminusdb.iotdemozone.com" },
+        { "name": "TERMINUS_USER", "value": "admin" },
+        { "name": "TERMINUS_TEAM", "value": "admin" },
+        { "name": "TERMINUS_DB",   "value": "aurora" }
       ],
       "secrets": [
         {
@@ -35,6 +39,10 @@
         {
           "name": "AURORA_API_KEY",
           "valueFrom": "arn:aws:secretsmanager:eu-central-1:881490131520:secret:aurora-simulator/api-key-hauld3"
+        },
+        {
+          "name": "TERMINUS_PASS",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:881490131520:secret:aurora-simulator/terminus-pass-XaWHFN:password::"
         }
       ],
       "stopTimeout": 30,
