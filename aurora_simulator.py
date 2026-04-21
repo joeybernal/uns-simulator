@@ -19,7 +19,12 @@ MQTT_PORT   = int(os.getenv("MQTT_PORT",   "1883"))
 MQTT_USER   = os.getenv("MQTT_USER",   "admin")
 MQTT_PASS   = os.getenv("MQTT_PASS",   "28luXF7q")
 SERVER_PORT = int(os.getenv("AURORA_PORT", "8081"))
-SIM_API_KEY = os.getenv("AURORA_API_KEY", "").strip()
+_raw_api_key = os.getenv("AURORA_API_KEY", "").strip()
+try:
+    import json as _json
+    SIM_API_KEY = _json.loads(_raw_api_key).get("api_key", _raw_api_key) if _raw_api_key.startswith("{") else _raw_api_key
+except Exception:
+    SIM_API_KEY = _raw_api_key
 INFLUX_URL  = os.getenv("INFLUX_URL",  "").strip()
 INFLUX_TOKEN= os.getenv("INFLUX_TOKEN","").strip()
 INFLUX_ORG  = os.getenv("INFLUX_ORG",  "Deloitte").strip()
