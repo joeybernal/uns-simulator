@@ -30,6 +30,12 @@ INFLUX_TOKEN= os.getenv("INFLUX_TOKEN","").strip()
 INFLUX_ORG  = os.getenv("INFLUX_ORG",  "Deloitte").strip()
 INFLUX_BUCKET=os.getenv("INFLUX_BUCKET","Aurora").strip()
 
+TERMINUS_URL  = os.getenv("TERMINUS_URL",  "").strip()
+TERMINUS_USER = os.getenv("TERMINUS_USER", "admin").strip()
+TERMINUS_PASS = os.getenv("TERMINUS_PASS", "").strip()
+TERMINUS_TEAM = os.getenv("TERMINUS_TEAM", "admin").strip()
+TERMINUS_DB   = os.getenv("TERMINUS_DB",   "aurora").strip()
+
 class SimulatorState:
     def __init__(self):
         self.running = True
@@ -264,6 +270,60 @@ def _influx_field(k: str, v) -> str | None:
         return f'{k}="{escaped}"'
     return None
 
+# ── TerminusDB scenario sync ──────────────────────────────────────────────────
+
+async def _update_terminus_scenario(old_id: str, new_id: str) -> None:
+    """Fire-and-forget: record ScenarioEvent + update PlantState in TerminusDB."""
+    if not TERMINUS_URL or not TERMINUS_PASS:
+        return
+    try:
+        import base64, datetime as _dt, urllib.request as _ur, urllib.error as _ue
+        auth = "Basic " + base64.b64encode(f"{TERMINUS_USER}:{TERMINUS_PASS}".encode()).decode()
+        base = f"{TERMINUS_URL}/api/document/{TERMINUS_TEAM}/{TERMINUS_DB}"
+        headers = {"Content-Type": "application/json", "Authorization": auth}
+        now_iso = _dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        def _post(url, body):
+            data = json.dumps(body).encode()
+            req = _ur.Request(url, data=data, method="POST", headers=headers)
+            with _ur.urlopen(req, timeout=5) as r:
+                return r.status
+
+        def _put(url, body):
+            data = json.dumps(body).encode()
+            req = _ur.Request(url, data=data, method="PUT", headers=headers)
+            with _ur.urlopen(req, timeout=5) as r:
+                return r.status
+
+        # 1. Create ScenarioEvent document
+        event_doc = {
+            "@type": "ScenarioEvent",
+            "scenario": {"@type": "@id", "@id": f"FaultScenario/{new_id}"},
+            "activated_at": now_iso,
+            "triggered_by": "api",
+            "influx_query_hint": (
+                f'from(bucket:"Aurora") |> range(start: -1h) '
+                f'|> filter(fn:(r) => r.scenario == "{new_id}")'
+            ),
+        }
+        _post(f"{base}?author=aurora-sim&message=scenario+activated+{new_id}", event_doc)
+
+        # 2. Update PlantState singleton
+        plant_state = {
+            "@type": "PlantState",
+            "@id": "PlantState/aurora",
+            "plant_id": "aurora",
+            "active_scenario": {"@type": "@id", "@id": f"FaultScenario/{new_id}"},
+            "last_updated": now_iso,
+            "mqtt_connected": STATE.mqtt_connected,
+        }
+        _put(f"{base}?author=aurora-sim&message=plantstate+update", plant_state)
+
+        print(f"[terminus] scenario event + PlantState updated → {new_id}")
+    except Exception as e:
+        print(f"[terminus] sync failed (non-critical): {e}")
+
+
 def _write_influx(stream: dict, payload: dict) -> None:
     """Best-effort InfluxDB write — runs in the publisher thread, no blocking."""
     try:
@@ -423,9 +483,12 @@ async def reset_demo():
 @app.post("/api/scenario/{scenario_id}")
 async def set_scenario(scenario_id:str):
     if scenario_id not in FAULT_SCENARIOS: return JSONResponse({"ok":False,"error":"Unknown scenario"},status_code=404)
+    old_scenario = STATE.active_scenario
     STATE.active_scenario=scenario_id; sc=FAULT_SCENARIOS[scenario_id]
     await WS_MGR.broadcast({"type":"scenario_change","scenario":scenario_id,
         "label":sc["label"],"affected":sc.get("affected",[]),"ai_hint":sc.get("ai_hint","")})
+    # Sync to TerminusDB (non-blocking, best-effort)
+    asyncio.create_task(_update_terminus_scenario(old_scenario, scenario_id))
     return {"ok":True,"scenario":scenario_id,"ai_hint":sc.get("ai_hint","")}
 
 @app.post("/api/trigger_dpp")
