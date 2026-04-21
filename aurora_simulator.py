@@ -17,7 +17,15 @@ from aurora_model import STREAMS, FAULT_SCENARIOS, STREAM_BY_ID, SIM, BATCH, BAT
 MQTT_HOST   = os.getenv("MQTT_HOST",   "mqtt.iotdemozone.com")
 MQTT_PORT   = int(os.getenv("MQTT_PORT",   "1883"))
 MQTT_USER   = os.getenv("MQTT_USER",   "admin")
-MQTT_PASS   = os.getenv("MQTT_PASS",   "28luXF7q")
+_MQTT_DEFAULT = "28luXF7q"
+_raw_mqtt_pass = os.getenv("MQTT_PASS", "").strip()
+try:
+    # Secret may be injected as JSON {"password":"..."} or plain string
+    import json as _j
+    _parsed = _j.loads(_raw_mqtt_pass)
+    MQTT_PASS = _parsed.get("password", _parsed.get("value", _MQTT_DEFAULT)) if isinstance(_parsed, dict) else _raw_mqtt_pass or _MQTT_DEFAULT
+except Exception:
+    MQTT_PASS = _raw_mqtt_pass or _MQTT_DEFAULT
 SERVER_PORT = int(os.getenv("AURORA_PORT", "8081"))
 _raw_api_key = os.getenv("AURORA_API_KEY", "").strip()
 try:
