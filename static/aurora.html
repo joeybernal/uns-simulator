@@ -169,6 +169,57 @@
   </div>
 </div>
 
+<!-- ── PRE-DEMO CHECK ─────────────────────────────────────────────────────── -->
+<div class="card p-3 mb-3">
+  <div class="flex items-center justify-between mb-2">
+    <div class="text-sm font-bold text-white">🚦 Pre-Demo Setup</div>
+    <button @click="runPreDemo()"
+            :disabled="preDemoRunning"
+            class="text-xs bg-blue-800 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-1.5 rounded font-semibold transition-all">
+      <span x-text="preDemoRunning ? '⏳ Checking…' : '▶ Run Pre-Demo Check'"></span>
+    </button>
+  </div>
+
+  <!-- idle state -->
+  <div x-show="!preDemoResult && !preDemoRunning" class="text-xs text-slate-500">
+    Checks simulator · TerminusDB · Grafana · resets scenario to <span class="font-mono text-slate-400">normal</span>
+  </div>
+
+  <!-- running spinner -->
+  <div x-show="preDemoRunning" class="text-xs text-blue-400 animate-pulse">Checking all systems…</div>
+
+  <!-- results -->
+  <div x-show="preDemoResult" x-cloak class="space-y-1 mt-1">
+    <!-- overall banner -->
+    <div class="text-xs font-bold px-3 py-1.5 rounded"
+         :class="preDemoResult&&preDemoResult.ready ? 'bg-emerald-900 text-emerald-300' : 'bg-red-900 text-red-300'">
+      <span x-text="preDemoResult&&preDemoResult.ready ? '✅ All systems ready — demo can start!' : '❌ One or more checks failed — see below'"></span>
+    </div>
+    <!-- per-system rows -->
+    <template x-if="preDemoResult&&preDemoResult.checks">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+        <template x-for="[name, res] in Object.entries(preDemoResult.checks)" :key="name">
+          <div class="rounded px-2 py-1.5 text-xs"
+               :class="res.ok===true ? 'bg-emerald-950 border border-emerald-800' : (res.ok===false ? 'bg-red-950 border border-red-800' : 'bg-slate-800 border border-slate-700')">
+            <div class="font-bold capitalize"
+                 :class="res.ok===true ? 'text-emerald-400' : (res.ok===false ? 'text-red-400' : 'text-slate-400')"
+                 x-text="(res.ok===true?'✅ ':(res.ok===false?'❌ ':'⚪ '))+name"></div>
+            <div class="text-slate-400 mt-0.5 font-mono leading-tight" x-text="res.detail"></div>
+          </div>
+        </template>
+      </div>
+    </template>
+    <!-- expected output box -->
+    <div class="mt-2 rounded bg-slate-900 border border-slate-700 px-3 py-2 font-mono text-xs text-slate-400 leading-relaxed">
+      <div class="text-slate-500 mb-1">Expected output:</div>
+      <div>simulator: running=True mqtt=True streams=111</div>
+      <div>terminusdb: active_scenario=normal</div>
+      <div>grafana: database=ok</div>
+      <div>reset: scenario reset to normal</div>
+    </div>
+  </div>
+</div>
+
 <!-- ── KPI STRIP ───────────────────────────────────────────────────────────── -->
 <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-3">
   <div class="card p-2">
@@ -692,6 +743,7 @@ function auroraApp(){
     streams:[], scenarios:[], scenarioDetail:null, recentMessages:[], inspectionHistory:[],
     tab:'streams', streamFilter:'', areaFilter:'', typeFilter:'', sourceFilter:'', feedSourceFilter:'',
     affectedAssets:[],
+    preDemoRunning:false, preDemoResult:null,
 
     init(){
       // Restore saved theme
@@ -840,6 +892,16 @@ function auroraApp(){
       this.lightMode=!this.lightMode;
       document.body.classList.toggle('light',this.lightMode);
       localStorage.setItem('aurora-theme',this.lightMode?'light':'dark');
+    },
+    runPreDemo(){
+      this.preDemoRunning=true; this.preDemoResult=null;
+      fetch('/api/predemo',{headers:this._h()}).then(r=>r.json()).then(d=>{
+        this.preDemoResult=d; this.preDemoRunning=false;
+        // Apply the reset the endpoint just performed
+        this.activeScenario='normal'; this.affectedAssets=[];
+        const sc=this.scenarios.find(s=>s.id==='normal');
+        if(sc){this.scenarioLabel=sc.label;this.scenarioDetail=sc;}
+      }).catch(e=>{this.preDemoResult={ready:false,checks:{error:{ok:false,detail:String(e)}}};this.preDemoRunning=false;});
     },
     apiPost(path){fetch(path,{method:'POST',headers:this._h()}).then(r=>r.json()).then(d=>d.running!==undefined&&(this.running=d.running));},
     fmtUptime(s){if(!s)return'0s';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${h}h ${m}m`:m>0?`${m}m ${sc}s`:`${sc}s`;},

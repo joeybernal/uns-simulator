@@ -624,6 +624,71 @@ async def _update_terminus_scenario(old_id: str, new_id: str) -> None:
         print(f"[terminus] sync failed (non-critical): {type(e).__name__}: {e}")
 
 
+@app.get("/api/predemo")
+async def predemo_check():
+    """Run the pre-demo health check: verify all 4 systems and reset to normal.
+    Returns a structured result for each system so the UI can show green/red.
+    """
+    import urllib.request, urllib.error
+    results = {}
+
+    # 1. Simulator self-check (always passes if we're here)
+    results["simulator"] = {
+        "ok":      STATE.running and STATE.mqtt_connected,
+        "detail":  f"running={STATE.running} mqtt={STATE.mqtt_connected} streams={len(STREAMS)}",
+    }
+
+    # 2. TerminusDB PlantState
+    if TERMINUS_URL and TERMINUS_PASS:
+        try:
+            loop = asyncio.get_event_loop()
+            def _check_terminus():
+                import urllib.request, urllib.error, base64, json as _json
+                url = f"{TERMINUS_URL}/api/document/{TERMINUS_TEAM}/{TERMINUS_DB}?type=PlantState"
+                req = urllib.request.Request(url)
+                creds = base64.b64encode(f"{TERMINUS_USER}:{TERMINUS_PASS}".encode()).decode()
+                req.add_header("Authorization", f"Basic {creds}")
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    text = resp.read().decode()
+                for line in text.strip().split("\n"):
+                    if line.strip().startswith("{"):
+                        d = _json.loads(line)
+                        return {"ok": True, "detail": f"active_scenario={d.get('active_scenario','?').split('/')[-1]}"}
+                return {"ok": False, "detail": "no PlantState document found"}
+            result = await loop.run_in_executor(None, _check_terminus)
+            results["terminusdb"] = result
+        except Exception as e:
+            results["terminusdb"] = {"ok": False, "detail": str(e)[:120]}
+    else:
+        results["terminusdb"] = {"ok": None, "detail": "not configured (TERMINUS_URL not set)"}
+
+    # 3. Grafana health
+    try:
+        loop = asyncio.get_event_loop()
+        def _check_grafana():
+            import urllib.request, json as _json
+            req = urllib.request.Request("https://grafana.iotdemozone.com/api/health")
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                d = _json.loads(resp.read().decode())
+                return {"ok": d.get("database") == "ok", "detail": f"database={d.get('database')} version={d.get('version','')}"}
+        results["grafana"] = await loop.run_in_executor(None, _check_grafana)
+    except Exception as e:
+        results["grafana"] = {"ok": False, "detail": str(e)[:120]}
+
+    # 4. Reset to normal (always do this as last step)
+    old = STATE.active_scenario
+    STATE.active_scenario = "normal"
+    sc = FAULT_SCENARIOS["normal"]
+    await WS_MGR.broadcast({"type": "scenario_change", "scenario": "normal", "label": sc["label"], "affected": []})
+    task = asyncio.create_task(_update_terminus_scenario(old, "normal"))
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
+    results["reset"] = {"ok": True, "detail": "scenario reset to normal"}
+
+    all_ok = all(v["ok"] for v in results.values() if v["ok"] is not None)
+    return {"ready": all_ok, "checks": results}
+
+
 @app.post("/api/scenario/{scenario_id}")
 async def set_scenario(scenario_id: str):
     if scenario_id not in FAULT_SCENARIOS:
