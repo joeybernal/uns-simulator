@@ -697,8 +697,13 @@ function auroraApp(){
       // Restore saved theme
       const saved=localStorage.getItem('aurora-theme');
       if(saved==='light'){this.lightMode=true;document.body.classList.add('light');}
-      fetch('/api/status').then(r=>r.json()).then(d=>this.applyStatus(d));
-      this.connectWs();
+      // Load API key from server config, then bootstrap
+      fetch('/api/config').then(r=>r.json()).then(cfg=>{
+        this.apiKey=cfg.api_key||'';
+        const h=this.apiKey?{'X-API-Key':this.apiKey}:{};
+        fetch('/api/status',{headers:h}).then(r=>r.json()).then(d=>this.applyStatus(d));
+        this.connectWs();
+      });
       setInterval(()=>{ this.dppTriggered=false; }, 4000);
     },
 
@@ -813,8 +818,10 @@ function auroraApp(){
     parseH(v){if(!v||v==='—')return 80;const n=parseFloat(v);return isNaN(n)?80:Math.min(100,Math.max(0,n));},
     hcolor(v){return v>80?'#10b981':v>60?'#f59e0b':'#ef4444';},
 
+    _h(){return this.apiKey?{'X-API-Key':this.apiKey}:{};},
+
     setScenario(id){
-      fetch('/api/scenario/'+id,{method:'POST'}).then(r=>r.json()).then(d=>{
+      fetch('/api/scenario/'+id,{method:'POST',headers:this._h()}).then(r=>r.json()).then(d=>{
         if(d.ok){
           this.activeScenario=id;this.aiHint=d.ai_hint||'';
           const sc=this.scenarios.find(s=>s.id===id);
@@ -824,7 +831,7 @@ function auroraApp(){
     },
 
     triggerDpp(){
-      fetch('/api/trigger_dpp',{method:'POST'}).then(r=>r.json()).then(d=>{
+      fetch('/api/trigger_dpp',{method:'POST',headers:this._h()}).then(r=>r.json()).then(d=>{
         if(d.ok){this.dppTriggered=true;this.dppHistory.push({batch_id:d.batch_id,unit_count:this.unitSeq,timestamp:new Date().toISOString()});}
       });
     },
@@ -834,7 +841,7 @@ function auroraApp(){
       document.body.classList.toggle('light',this.lightMode);
       localStorage.setItem('aurora-theme',this.lightMode?'light':'dark');
     },
-    apiPost(path){fetch(path,{method:'POST'}).then(r=>r.json()).then(d=>d.running!==undefined&&(this.running=d.running));},
+    apiPost(path){fetch(path,{method:'POST',headers:this._h()}).then(r=>r.json()).then(d=>d.running!==undefined&&(this.running=d.running));},
     fmtUptime(s){if(!s)return'0s';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${h}h ${m}m`:m>0?`${m}m ${sc}s`:`${sc}s`;},
   }
 }

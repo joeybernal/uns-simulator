@@ -337,7 +337,7 @@ app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_methods=["*"],allow_
 if SIM_API_KEY:
     class _AuthMW(BaseHTTPMiddleware):
         async def dispatch(self,req,call_next):
-            if req.url.path in("/health","/") or req.method=="OPTIONS": return await call_next(req)
+            if req.url.path in("/health","/","/api/config") or req.method=="OPTIONS": return await call_next(req)
             key=req.query_params.get("api_key","") if req.url.path=="/ws" else req.headers.get("X-API-Key","")
             if key!=SIM_API_KEY: return Response('{"detail":"Unauthorized"}',status_code=401,media_type="application/json")
             return await call_next(req)
@@ -390,6 +390,9 @@ def _status_dict():
 
 @app.get("/health")
 async def health(): return {"status":"ok","running":STATE.running,"mqtt":STATE.mqtt_connected,"streams":len(STREAMS),"uptime":round(time.time()-STATE.start_time)}
+
+@app.get("/api/config")
+async def get_config(): return {"api_key": SIM_API_KEY if SIM_API_KEY else ""}
 
 @app.get("/")
 async def root():
