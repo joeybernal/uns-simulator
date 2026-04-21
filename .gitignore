@@ -1,6 +1,22 @@
+# Python
 .venv/
+venv/
 __pycache__/
 *.pyc
+*.pyo
 .env
 *.egg-info/
 dist/
+
+# Node / React
+uns-studio/node_modules/
+uns-studio/dist/
+node_modules/
+
+# OS
+.DS_Store
+
+# AWS / secrets
+*.pem
+*.key
+secret.yaml
