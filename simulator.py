@@ -37,6 +37,13 @@ SERVER_PORT = int(os.getenv("SERVER_PORT", "8080"))
 # Leave unset (or empty) to run without auth (local dev default).
 SIM_API_KEY = os.getenv("SIM_API_KEY", "").strip()
 
+# TerminusDB — optional graph context layer
+TERMINUS_URL  = os.getenv("TERMINUS_URL",  "").strip()
+TERMINUS_USER = os.getenv("TERMINUS_USER", "admin").strip()
+TERMINUS_PASS = os.getenv("TERMINUS_PASS", "").strip()
+TERMINUS_TEAM = os.getenv("TERMINUS_TEAM", "admin").strip()
+TERMINUS_DB   = os.getenv("TERMINUS_DB",   "aurora").strip()
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Simulator state
 # ─────────────────────────────────────────────────────────────────────────────
@@ -521,10 +528,99 @@ async def stop_stream(stream_id: str):
     return {"ok": True}
 
 
+async def _update_terminus_scenario(old_id: str, new_id: str) -> None:
+    """Fire-and-forget: record ScenarioEvent + update PlantState in TerminusDB."""
+    if not TERMINUS_URL or not TERMINUS_PASS:
+        return
+    try:
+        import base64, datetime as _dt, urllib.request as _ur
+        auth = "Basic " + base64.b64encode(f"{TERMINUS_USER}:{TERMINUS_PASS}".encode()).decode()
+        base = f"{TERMINUS_URL}/api/document/{TERMINUS_TEAM}/{TERMINUS_DB}"
+        hdrs = {"Content-Type": "application/json", "Authorization": auth}
+        now_iso = _dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        def _post(url, body):
+            data = json.dumps(body).encode()
+            req = _ur.Request(url, data=data, method="POST", headers=hdrs)
+            with _ur.urlopen(req, timeout=5) as r:
+                return r.status
+
+        def _put(url, body):
+            data = json.dumps(body).encode()
+            req = _ur.Request(url, data=data, method="PUT", headers=hdrs)
+            with _ur.urlopen(req, timeout=5) as r:
+                return r.status
+
+        def _get(url):
+            req = _ur.Request(url, headers={"Authorization": auth})
+            with _ur.urlopen(req, timeout=5) as r:
+                raw = r.read().decode()
+            result = []
+            for line in raw.strip().split("\n"):
+                if line.strip():
+                    try: result.append(json.loads(line))
+                    except Exception: pass
+            return result
+
+        # 1. Close previous open ScenarioEvent
+        try:
+            events_raw = _get(f"{base}?type=ScenarioEvent&count=50")
+            open_events = [
+                e for e in events_raw
+                if e.get("scenario", "").endswith(f"/{old_id}")
+                and "deactivated_at" not in e
+            ]
+            for ev in open_events:
+                activated = ev.get("activated_at", now_iso)
+                try:
+                    import datetime as _dt2
+                    t0 = _dt2.datetime.fromisoformat(activated.replace("Z", "+00:00"))
+                    t1 = _dt2.datetime.now(_dt2.timezone.utc)
+                    dur = int((t1 - t0).total_seconds())
+                except Exception:
+                    dur = None
+                closed = dict(ev)
+                closed["deactivated_at"] = now_iso
+                if dur is not None:
+                    closed["duration_s"] = dur
+                _put(f"{base}?author=uns-sim&message=scenario+deactivated+{old_id}", closed)
+        except Exception as ce:
+            print(f"[terminus] could not close old events: {ce}")
+
+        # 2. Create new ScenarioEvent
+        event_doc = {
+            "@type": "ScenarioEvent",
+            "scenario": {"@type": "@id", "@id": f"FaultScenario/{new_id}"},
+            "activated_at": now_iso,
+            "triggered_by": "api",
+            "influx_query_hint": (
+                f'from(bucket:"Aurora") |> range(start: -1h) '
+                f'|> filter(fn:(r) => r.scenario == "{new_id}")'
+            ),
+        }
+        _post(f"{base}?author=uns-sim&message=scenario+activated+{new_id}", event_doc)
+
+        # 3. Update PlantState singleton
+        plant_state = {
+            "@type": "PlantState",
+            "@id": "PlantState/aurora",
+            "plant_id": "aurora",
+            "active_scenario": {"@type": "@id", "@id": f"FaultScenario/{new_id}"},
+            "last_updated": now_iso,
+            "mqtt_connected": STATE.mqtt_connected,
+        }
+        _put(f"{base}?author=uns-sim&message=plantstate+update", plant_state)
+
+        print(f"[terminus] scenario event + PlantState updated → {new_id}")
+    except Exception as e:
+        print(f"[terminus] sync failed (non-critical): {e}")
+
+
 @app.post("/api/scenario/{scenario_id}")
 async def set_scenario(scenario_id: str):
     if scenario_id not in FAULT_SCENARIOS:
         return JSONResponse({"ok": False, "error": "Unknown scenario"}, status_code=404)
+    old_scenario = STATE.active_scenario
     STATE.active_scenario = scenario_id
     sc = FAULT_SCENARIOS[scenario_id]
     await WS_MGR.broadcast({
@@ -534,6 +630,8 @@ async def set_scenario(scenario_id: str):
         "affected": sc.get("affected", []),
     })
     print(f"[api] scenario → {scenario_id}")
+    # Sync to TerminusDB (non-blocking, best-effort)
+    asyncio.create_task(_update_terminus_scenario(old_scenario, scenario_id))
     return {"ok": True, "scenario": scenario_id}
 
 
