@@ -1,0 +1,99 @@
+{
+  "dashboard": {
+    "uid": "aurora-plant-overview",
+    "title": "4. Aurora — Plant Overview",
+    "tags": ["aurora", "plant", "oee"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {"from": "now-3h", "to": "now"},
+    "panels": [
+      {
+        "id": 1, "type": "stat", "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
+        "title": "OEE — PR01",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "orientation": "auto", "colorMode": "background", "graphMode": "area", "textMode": "value"},
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 70}, {"color": "green", "value": 85}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"oee\" and r.asset_id == \"press_PR01\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 2, "type": "stat", "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0},
+        "title": "OEE — PR02",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 70}, {"color": "green", "value": 85}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"oee\" and r.asset_id == \"press_PR02\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 3, "type": "stat", "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
+        "title": "OEE — OV01",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 70}, {"color": "green", "value": 85}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"oee\" and r.asset_id == \"oven_OV01\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 4, "type": "stat", "gridPos": {"h": 4, "w": 4, "x": 12, "y": 0},
+        "title": "Current Scenario",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "value"},
+        "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"scenario\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 5, "type": "stat", "gridPos": {"h": 4, "w": 4, "x": 16, "y": 0},
+        "title": "Active Alarms",
+        "options": {"reduceOptions": {"calcs": ["sum"]}, "colorMode": "background"},
+        "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}, {"color": "red", "value": 3}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"active_count\")\n  |> last()\n  |> sum()", "refId": "A"}]
+      },
+      {
+        "id": 6, "type": "stat", "gridPos": {"h": 4, "w": 4, "x": 20, "y": 0},
+        "title": "Plant Energy (kW)",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
+        "fieldConfig": {"defaults": {"unit": "kwatt", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 200}, {"color": "red", "value": 300}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_plant\" and r._field == \"total_power_kw\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 10, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "title": "OEE History — All Press & Oven Assets",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "custom": {"lineWidth": 2}}},
+        "targets": [
+          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"oee\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({r with _value: float(v: r._value)}))", "refId": "A"}]
+      },
+      {
+        "id": 11, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "title": "Availability & Performance — PR01",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}},
+        "targets": [
+          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"press_PR01\" and (r._field == \"availability\" or r._field == \"performance_rate\" or r._field == \"quality_rate\"))\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 20, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "title": "Press Hydraulic Pressure (bar)",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "bar", "custom": {"lineWidth": 2}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 250}, {"color": "red", "value": 280}]}}},
+        "targets": [
+          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"hydraulic_pressure_bar\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 21, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "title": "Oven Zone Temperatures (°C)",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "celsius", "custom": {"lineWidth": 2}}},
+        "targets": [
+          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"oven\" and (r._field == \"zone1_temp_c\" or r._field == \"zone2_temp_c\" or r._field == \"zone3_temp_c\" or r._field == \"zone4_temp_c\"))\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 30, "type": "timeseries", "gridPos": {"h": 8, "w": 24, "x": 0, "y": 20},
+        "title": "Production Rate (parts/hr) — All Assets",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "reqpm", "custom": {"lineWidth": 2}}},
+        "targets": [
+          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"production_rate_per_hr\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)", "refId": "A"}]
+      }
+    ],
+    "schemaVersion": 36,
+    "version": 0,
+    "overwrite": true
+  },
+  "folderUid": "",
+  "overwrite": true
+}

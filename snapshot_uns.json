@@ -1,0 +1,9 @@
+{
+  "collected_at": "2026-04-18T14:44:26.550646+00:00",
+  "broker": "mqtt.iotdemozone.com:1883",
+  "wildcard": "aurora/#",
+  "duration_s": 15,
+  "topic_count": 0,
+  "message_count": 0,
+  "topics": []
+}

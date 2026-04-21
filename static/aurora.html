@@ -7,15 +7,97 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <style>
-  html,body{background:#0a0f1a;color:#e2e8f0;font-family:system-ui,sans-serif}
+  /* ── DARK MODE (default) ─────────────────────────────────────────── */
+  :root {
+    --bg:       #0a0f1a;
+    --surface:  #0f1d2e;
+    --border:   #1e3a5f;
+    --text:     #e2e8f0;
+    --text-muted: #94a3b8;
+    --input-bg: #1e293b;
+    --row-hover: rgba(30,58,95,0.3);
+    --table-head: #0f172a;
+    --scrollbar-track: #1e293b;
+    --scrollbar-thumb: #475569;
+  }
+  /* ── LIGHT MODE ──────────────────────────────────────────────────── */
+  body.light {
+    --bg:       #f1f5f9;
+    --surface:  #ffffff;
+    --border:   #cbd5e1;
+    --text:     #0f172a;
+    --text-muted: #64748b;
+    --input-bg: #f8fafc;
+    --row-hover: rgba(203,213,225,0.4);
+    --table-head: #f1f5f9;
+    --scrollbar-track: #e2e8f0;
+    --scrollbar-thumb: #94a3b8;
+  }
+  html,body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;transition:background .2s,color .2s}
   [x-cloak]{display:none!important}
   ::-webkit-scrollbar{width:4px;height:4px}
-  ::-webkit-scrollbar-track{background:#1e293b}
-  ::-webkit-scrollbar-thumb{background:#475569;border-radius:3px}
-  .card{background:#0f1d2e;border:1px solid #1e3a5f;border-radius:10px}
-  .card-red{background:#0f1d2e;border:1px solid #7f1d1d;border-radius:10px}
-  .card-amber{background:#0f1d2e;border:1px solid #92400e;border-radius:10px}
-  .card-green{background:#0f1d2e;border:1px solid #14532d;border-radius:10px}
+  ::-webkit-scrollbar-track{background:var(--scrollbar-track)}
+  ::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:3px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px}
+  .card-red{background:var(--surface);border:1px solid #7f1d1d;border-radius:10px}
+  .card-amber{background:var(--surface);border:1px solid #92400e;border-radius:10px}
+  .card-green{background:var(--surface);border:1px solid #14532d;border-radius:10px}
+
+  /* Light mode overrides for specific elements */
+  body.light .sc-btn{background:var(--surface);border-color:var(--border);color:#1e40af}
+  body.light .sc-btn:hover{background:#eff6ff}
+  body.light .sc-btn.active{background:#dbeafe;border-color:#3b82f6;color:#1e3a8a}
+  body.light .sc-btn.active-fault{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+  body.light .tab-btn{color:#374151}
+  body.light .tab-btn.active{background:#dbeafe;border-color:#3b82f6;color:#1e40af}
+  body.light .tab-btn:not(.active):hover{background:#f1f5f9}
+  body.light input,body.light select{background:var(--input-bg);color:var(--text);border-color:var(--border)}
+  body.light table thead tr{background:var(--table-head)}
+  body.light table tbody tr:hover{background:var(--row-hover)}
+  body.light .flow-ok{background:#f0fdf4;border-color:#16a34a;color:#166534}
+  body.light .flow-warn{background:#fffbeb;border-color:#d97706;color:#92400e}
+  body.light .flow-fault{background:#fef2f2;border-color:#dc2626;color:#991b1b}
+  body.light .flow-hold{background:#faf5ff;border-color:#7c3aed;color:#5b21b6}
+  body.light .dpp-btn{background:#f0fdf4;border-color:#16a34a;color:#166534}
+  body.light .hbar{background:#e2e8f0}
+  /* scenario detail panel */
+  body.light .bg-slate-900{background:#f8fafc !important}
+  body.light .bg-slate-800{background:#f1f5f9 !important}
+  body.light .border-slate-600{border-color:#cbd5e1 !important}
+  body.light .border-slate-800{border-color:#e2e8f0 !important}
+  /* badges stay coloured in light mode but slightly desaturated */
+  body.light .badge-PLC    {background:#dbeafe;color:#1e40af}
+  body.light .badge-MES    {background:#ede9fe;color:#5b21b6}
+  body.light .badge-AI     {background:#d1fae5;color:#065f46}
+  body.light .badge-SCADA  {background:#fef3c7;color:#92400e}
+  body.light .badge-ERP    {background:#e0e7ff;color:#3730a3}
+  body.light .badge-QMS    {background:#dcfce7;color:#166534}
+  body.light .badge-DPP    {background:#fae8ff;color:#7e22ce}
+  body.light .badge-press    {background:#dbeafe;color:#1e40af}
+  body.light .badge-oven     {background:#ffedd5;color:#c2410c}
+  body.light .badge-conveyor {background:#dcfce7;color:#166534}
+  body.light .badge-robot    {background:#fae8ff;color:#7e22ce}
+  body.light .badge-sprayer  {background:#cffafe;color:#0e7490}
+  body.light .badge-compressor{background:#fef9c3;color:#854d0e}
+  body.light .badge-inspection{background:#f1f5f9;color:#475569}
+  body.light .badge-quality  {background:#dcfce7;color:#166534}
+  body.light .badge-rfid     {background:#fefce8;color:#854d0e}
+  body.light .badge-plant    {background:#e0e7ff;color:#3730a3}
+  body.light .badge-line     {background:#e0e7ff;color:#4338ca}
+  /* text colour overrides */
+  body.light .text-slate-200{color:#1e293b !important}
+  body.light .text-slate-300{color:#334155 !important}
+  body.light .text-slate-400{color:#475569 !important}
+  body.light .text-slate-500{color:#64748b !important}
+  body.light .text-slate-600{color:#64748b !important}
+  body.light .text-slate-700{color:#94a3b8 !important}
+  body.light .text-white{color:#0f172a !important}
+  body.light .font-mono.text-cyan-300{color:#0369a1 !important}
+  body.light .font-mono.text-cyan-400{color:#0284c7 !important}
+  body.light .bg-slate-800\/30{background:rgba(241,245,249,0.8) !important}
+  body.light .bg-slate-800\/20{background:rgba(241,245,249,0.6) !important}
+  /* feed / message row */
+  body.light .card.p-2 .flex.gap-2 .text-slate-300{color:#1e293b !important}
   /* source badges */
   .badge-PLC    {background:#1e3a5f;color:#93c5fd;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap}
   .badge-MES    {background:#3b1f5f;color:#c4b5fd;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap}
@@ -77,7 +159,6 @@
     </div>
   </div>
   <div class="flex items-center gap-2 flex-wrap">
-    <a href="http://localhost:8080" target="_blank" class="text-xs text-slate-500 hover:text-slate-200 border border-slate-700 rounded px-2 py-1">← IoTAuto</a>
     <span class="text-xs px-2 py-1 rounded font-mono" :class="mqttOk?'bg-emerald-900 text-emerald-300':'bg-red-900 text-red-300 pulse'" x-text="mqttOk?'● MQTT':'○ MQTT'"></span>
     <span class="text-xs px-2 py-1 rounded" :class="running?'bg-blue-900 text-blue-300':'bg-slate-700 text-slate-400'" x-text="running?'▶ Running':'■ Stopped'"></span>
     <span class="text-xs text-slate-400 font-mono" x-text="rate+' msg/s'"></span>
@@ -588,9 +669,18 @@
   <span x-text="'Uptime: '+fmtUptime(uptime)+'  ·  WS: '+wsClients+'  ·  Streams: '+streams.length"></span>
 </div>
 
+<!-- ── FLOATING THEME TOGGLE ─────────────────────────────────────────────── -->
+<button @click="toggleTheme()"
+        class="fixed bottom-4 right-4 z-50 w-10 h-10 rounded-full shadow-lg flex items-center justify-center text-lg transition-all hover:scale-110 active:scale-95"
+        :class="lightMode?'bg-white border border-slate-300 shadow-slate-300':'bg-slate-800 border border-slate-600 shadow-slate-900'"
+        :title="lightMode?'Switch to dark mode':'Switch to light mode'"
+        x-text="lightMode?'🌙':'☀️'">
+</button>
+
 <script>
 function auroraApp(){
   return {
+    lightMode:false,
     ws:null, running:false, mqttOk:false, rate:0, uptime:0, wsClients:0,
     totalPublished:0, activeScenario:'normal', scenarioLabel:'Normal', aiHint:'',
     oee:79, fpy:98, plantKw:0, plantKwh:0, co2Today:0, costToday:0,
@@ -604,6 +694,9 @@ function auroraApp(){
     affectedAssets:[],
 
     init(){
+      // Restore saved theme
+      const saved=localStorage.getItem('aurora-theme');
+      if(saved==='light'){this.lightMode=true;document.body.classList.add('light');}
       fetch('/api/status').then(r=>r.json()).then(d=>this.applyStatus(d));
       this.connectWs();
       setInterval(()=>{ this.dppTriggered=false; }, 4000);
@@ -680,7 +773,7 @@ function auroraApp(){
         (!this.areaFilter||s.area===this.areaFilter)&&
         (!this.typeFilter||s.asset_type===this.typeFilter)&&
         (!this.sourceFilter||s.source===this.sourceFilter)
-      );
+      ).sort((a,b)=>a.topic.localeCompare(b.topic));
     },
     get uniqueAreas(){return[...new Set(this.streams.map(s=>s.area).filter(Boolean))].sort();},
     get uniqueTypes(){return[...new Set(this.streams.map(s=>s.asset_type).filter(Boolean))].sort();},
@@ -736,6 +829,11 @@ function auroraApp(){
       });
     },
 
+    toggleTheme(){
+      this.lightMode=!this.lightMode;
+      document.body.classList.toggle('light',this.lightMode);
+      localStorage.setItem('aurora-theme',this.lightMode?'light':'dark');
+    },
     apiPost(path){fetch(path,{method:'POST'}).then(r=>r.json()).then(d=>d.running!==undefined&&(this.running=d.running));},
     fmtUptime(s){if(!s)return'0s';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${h}h ${m}m`:m>0?`${m}m ${sc}s`:`${sc}s`;},
   }

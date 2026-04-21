@@ -1,0 +1,117 @@
+{
+  "dashboard": {
+    "uid": "aurora-asset-telemetry",
+    "title": "5. Aurora — Asset Telemetry (Conveyors, Robots, Sprayers)",
+    "tags": ["aurora", "telemetry", "conveyor", "robot"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {"from": "now-2h", "to": "now"},
+    "panels": [
+      {
+        "id": 1, "type": "stat", "gridPos": {"h": 3, "w": 4, "x": 0, "y": 0},
+        "title": "CV01 Belt Speed (m/s)",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
+        "fieldConfig": {"defaults": {"unit": "velocityms", "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 0.5}, {"color": "green", "value": 1.0}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"conveyor_CV01\" and r._field == \"speed_ms\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 2, "type": "stat", "gridPos": {"h": 3, "w": 4, "x": 4, "y": 0},
+        "title": "CV02 Belt Speed (m/s)",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
+        "fieldConfig": {"defaults": {"unit": "velocityms", "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 0.5}, {"color": "green", "value": 1.0}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"conveyor_CV02\" and r._field == \"speed_ms\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 3, "type": "stat", "gridPos": {"h": 3, "w": 4, "x": 8, "y": 0},
+        "title": "CV03 Chain Speed (m/s)",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
+        "fieldConfig": {"defaults": {"unit": "velocityms", "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 0.3}, {"color": "green", "value": 0.8}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"conveyor_CV03\" and r._field == \"speed_ms\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 4, "type": "stat", "gridPos": {"h": 3, "w": 4, "x": 12, "y": 0},
+        "title": "CV04 Chain Speed (m/s)",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
+        "fieldConfig": {"defaults": {"unit": "velocityms", "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 0.3}, {"color": "green", "value": 0.7}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"conveyor_CV04\" and r._field == \"speed_ms\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 5, "type": "stat", "gridPos": {"h": 3, "w": 4, "x": 16, "y": 0},
+        "title": "CV05 Belt Speed (m/s)",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
+        "fieldConfig": {"defaults": {"unit": "velocityms", "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 0.5}, {"color": "green", "value": 1.2}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"conveyor_CV05\" and r._field == \"speed_ms\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 6, "type": "stat", "gridPos": {"h": 3, "w": 4, "x": 20, "y": 0},
+        "title": "Jam Detected",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background"},
+        "fieldConfig": {"defaults": {"mappings": [{"type": "value", "options": {"true": {"text": "⚠ JAM", "color": "red"}, "false": {"text": "OK", "color": "green"}}}], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"jam_detected\")\n  |> last()\n  |> max()", "refId": "A"}]
+      },
+      {
+        "id": 10, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 3},
+        "title": "Conveyor Speed History — All CVs (m/s)",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "velocityms", "min": 0, "custom": {"lineWidth": 2}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"conveyor\" and r._field == \"speed_ms\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 11, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 3},
+        "title": "Conveyor Motor Current (A) — All CVs",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "amp", "min": 0, "custom": {"lineWidth": 2}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 12}, {"color": "red", "value": 16}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"conveyor\" and r._field == \"motor_current_a\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 12, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 11},
+        "title": "CV01 Belt Tension (N)",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "forceN", "min": 0, "custom": {"lineWidth": 2}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1100}, {"color": "red", "value": 1300}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"conveyor_CV01\" and r._field == \"belt_tension_n\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 13, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 11},
+        "title": "Conveyor Bearing Temperature (°C)",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "celsius", "min": 0, "custom": {"lineWidth": 2}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 60}, {"color": "red", "value": 80}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"conveyor\" and r._field == \"bearing_temp_c\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 20, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 19},
+        "title": "Robot Position Error (mm) — R1/R2/R3",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "lengthmm", "min": 0, "custom": {"lineWidth": 2}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1.0}, {"color": "red", "value": 5.0}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"robot\" and r._field == \"position_error_mm\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 21, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 19},
+        "title": "Robot Cycle Time (s) — R1/R2/R3",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "s", "min": 0, "custom": {"lineWidth": 2}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 5}, {"color": "red", "value": 8}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"robot\" and r._field == \"cycle_time_s\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 30, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 27},
+        "title": "Sprayer SP02 — Flow Rate (l/min) & Atomizing Pressure (bar)",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"custom": {"lineWidth": 2}}},
+        "targets": [
+          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"sprayer_SP02\" and (r._field == \"fluid_flow_lpm\" or r._field == \"supply_pressure_bar\" or r._field == \"atomisation_pressure_bar\"))\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 31, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 27},
+        "title": "Sprayer SP02 — Coat Thickness (μm) & Uniformity (%)",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"custom": {"lineWidth": 2}}},
+        "targets": [
+          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"sprayer_SP02\" and (r._field == \"coat_thickness_um\" or r._field == \"coat_uniformity_pct\"))\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      }
+    ],
+    "schemaVersion": 36,
+    "version": 0,
+    "overwrite": true
+  },
+  "folderUid": "",
+  "overwrite": true
+}

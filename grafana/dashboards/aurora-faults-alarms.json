@@ -1,0 +1,121 @@
+{
+  "dashboard": {
+    "uid": "aurora-faults-alarms",
+    "title": "7. Aurora — Faults, Alarms & Scenario History",
+    "tags": ["aurora", "faults", "alarms", "scenarios"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {"from": "now-6h", "to": "now"},
+    "panels": [
+      {
+        "id": 1, "type": "stat", "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "title": "Current Scenario",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "value", "text": {"valueSize": 24}},
+        "fieldConfig": {"defaults": {"mappings": [
+          {"type": "value", "options": {"normal": {"text": "✅ NORMAL", "color": "green"}, "fault": {"text": "🔴 FAULT", "color": "red"}, "degraded": {"text": "⚠ DEGRADED", "color": "yellow"}}}
+        ], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"scenario\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 2, "type": "stat", "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "title": "Active Fault Code",
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "value"},
+        "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"fault_code\")\n  |> last()", "refId": "A"}]
+      },
+      {
+        "id": 3, "type": "stat", "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "title": "Alarm Count (last 1h)",
+        "options": {"reduceOptions": {"calcs": ["sum"]}, "colorMode": "background"},
+        "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 3}, {"color": "red", "value": 8}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"alarm_count\")\n  |> sum()", "refId": "A"}]
+      },
+      {
+        "id": 4, "type": "stat", "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "title": "Critical Alarms (last 6h)",
+        "options": {"reduceOptions": {"calcs": ["sum"]}, "colorMode": "background"},
+        "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}, {"color": "red", "value": 3}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"critical_count\")\n  |> sum()", "refId": "A"}]
+      },
+      {
+        "id": 10, "type": "timeseries", "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+        "title": "Scenario Timeline — All Assets (normal=1, degraded=0.5, fault=0)",
+        "description": "Maps scenario string to numeric value. Drops to 0 on fault, 0.5 on degraded — easy visual of fault events over time.",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"min": 0, "max": 1.2, "custom": {"lineWidth": 2, "fillOpacity": 20}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 0.4}, {"color": "green", "value": 0.9}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"scenario_numeric\")\n  |> aggregateWindow(every: 30s, fn: last, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 11, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "title": "Alarm Events Over Time — By Asset",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"min": 0, "custom": {"lineWidth": 1, "fillOpacity": 30, "drawStyle": "bars", "barAlignment": 0}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"alarm_count\")\n  |> aggregateWindow(every: 5m, fn: sum, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 12, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "title": "Press Fault Indicators — PR01 Hydraulic Pressure vs Threshold",
+        "description": "Hydraulic pressure dropping below ~170 bar indicates fault condition",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "bar", "custom": {"lineWidth": 2}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 170}, {"color": "green", "value": 200}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"hydraulic_pressure_bar\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 20, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "title": "Conveyor Jam Events — Speed Drop to Zero",
+        "description": "Speed dropping to 0 or near-0 indicates jam fault. Red threshold at 0.1 m/s.",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "velocityms", "min": 0, "custom": {"lineWidth": 2, "fillOpacity": 15}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 0.2}, {"color": "green", "value": 0.8}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"conveyor\" and r._field == \"speed_ms\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 21, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "title": "Robot R3 Spray Drift — Path Accuracy (mm)",
+        "description": "Path accuracy >0.5mm indicates spray drift fault. Robot R3 spray_drift scenario.",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "lengthmm", "min": 0, "custom": {"lineWidth": 2, "fillOpacity": 10}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.3}, {"color": "red", "value": 0.5}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"robot\" and r._field == \"path_accuracy_mm\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 30, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+        "title": "Oven Sync Loss — CV04 vs OV01 Temperature",
+        "description": "oven_cv04_sync_loss fault: CV04 speed becomes erratic while OV01 zone temps spike",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"custom": {"lineWidth": 2}}},
+        "targets": [
+          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"conveyor_CV04\" and r._field == \"speed_ms\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({r with _field: \"CV04 speed_ms\"}))", "refId": "A"},
+          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"oven_OV01\" and r._field == \"zone3_temp_c\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({r with _field: \"OV01 zone3_temp_c\"}))", "refId": "B"}]
+      },
+      {
+        "id": 31, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+        "title": "Sprayer Filter Blockage — Filter ΔP (bar)",
+        "description": "SP02 filter_dp_bar rising above 0.5 bar indicates filter_blocked fault",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "pressurebar", "min": 0, "custom": {"lineWidth": 2, "fillOpacity": 15}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.3}, {"color": "red", "value": 0.5}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"sprayer\" and r._field == \"filter_dp_bar\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 40, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 36},
+        "title": "Press Die Wear (%) — Fault at >90%",
+        "description": "Die wear progresses over time; fault triggers at >90% wear",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "custom": {"lineWidth": 2}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 70}, {"color": "red", "value": 90}]}}},
+        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"die_wear_pct\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)", "refId": "A"}]
+      },
+      {
+        "id": 41, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 36},
+        "title": "Compressor — Outlet Temp & Air Pressure",
+        "description": "CP01_overload: outlet_temp_c rises to ~105°C. compressed_air_leak: outlet_pressure_bar drops.",
+        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+        "fieldConfig": {"defaults": {"custom": {"lineWidth": 2}}},
+        "targets": [
+          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"compressor_CP01\" and (r._field == \"outlet_temp_c\" or r._field == \"outlet_pressure_bar\"))\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+      }
+    ],
+    "schemaVersion": 36,
+    "version": 0,
+    "overwrite": true
+  },
+  "folderUid": "",
+  "overwrite": true
+}

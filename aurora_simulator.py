@@ -22,8 +22,8 @@ SERVER_PORT = int(os.getenv("AURORA_PORT", "8081"))
 SIM_API_KEY = os.getenv("AURORA_API_KEY", "").strip()
 INFLUX_URL  = os.getenv("INFLUX_URL",  "").strip()
 INFLUX_TOKEN= os.getenv("INFLUX_TOKEN","").strip()
-INFLUX_ORG  = os.getenv("INFLUX_ORG",  "iotauto").strip()
-INFLUX_BUCKET=os.getenv("INFLUX_BUCKET","aurora").strip()
+INFLUX_ORG  = os.getenv("INFLUX_ORG",  "Deloitte").strip()
+INFLUX_BUCKET=os.getenv("INFLUX_BUCKET","Aurora").strip()
 
 class SimulatorState:
     def __init__(self):
@@ -157,23 +157,122 @@ def _publisher(loop):
                 asyncio.run_coroutine_threadsafe(EVENT_QUEUE.put({"type":"dpp_triggered",**dpp_payload}),loop)
         time.sleep(0.04)
 
-_influx_session=None
-def _write_influx(stream, payload):
-    """Best-effort InfluxDB line-protocol write in a background thread."""
+# ── InfluxDB line-protocol writer ─────────────────────────────────────────────
+# Measurement naming convention:
+#   aurora_telemetry   — PLC sensor data (temperature, pressure, speed, …)
+#   aurora_power       — 3-phase power readings (kW, PF, THD)
+#   aurora_energy      — energy rollups (kWh, CO₂, cost)
+#   aurora_health      — health scores and RUL
+#   aurora_performance — OEE, cycle time, production rate
+#   aurora_quality     — SPC charts, CMM inspection, leak test
+#   aurora_alarms      — alarm counts
+#   aurora_erp         — ERP production order / materials / holds
+#   aurora_mes         — MES batch / work order / shift
+#   aurora_plant       — plant-level KPIs and environment
+#   aurora_analytics   — AI anomaly scores and PdM predictions
+#   aurora_dpp         — Digital Product Passport events
+#   aurora_rfid        — RFID tracking events
+
+def _influx_measurement(stream_id: str) -> str:
+    """Map stream ID suffix to a clean measurement name."""
+    sid = stream_id.lower()
+    if any(x in sid for x in ("telemetry","lube","process_params","air_network","dimensions","result")):
+        return "aurora_telemetry"
+    if "power" in sid:
+        return "aurora_power"
+    if "energy" in sid:
+        return "aurora_energy"
+    if "health" in sid:
+        return "aurora_health"
+    if "performance" in sid:
+        return "aurora_performance"
+    if "spc" in sid or "cmm" in sid or "leak" in sid or "quality" in sid:
+        return "aurora_quality"
+    if "alarm" in sid:
+        return "aurora_alarms"
+    if sid.startswith("erp_"):
+        return "aurora_erp"
+    if sid.startswith("mes_"):
+        return "aurora_mes"
+    if "plant" in sid or "environment" in sid or "kpi" in sid:
+        return "aurora_plant"
+    if "anomaly" in sid or "pdm" in sid:
+        return "aurora_analytics"
+    if "dpp" in sid or "step_status" in sid:
+        return "aurora_dpp"
+    if "rfid" in sid:
+        return "aurora_rfid"
+    return "aurora_data"
+
+def _escape_tag(s: str) -> str:
+    return str(s).replace(" ", "\\ ").replace(",", "\\,").replace("=", "\\=")
+
+def _influx_field(k: str, v) -> str | None:
+    """Convert a payload field to InfluxDB line-protocol field format."""
+    if isinstance(v, bool):
+        return f'{k}={"true" if v else "false"}'
+    if isinstance(v, int):
+        return f"{k}={v}i"
+    if isinstance(v, float):
+        return f"{k}={v}"
+    if isinstance(v, str) and v not in ("", "—"):
+        escaped = v.replace('"', '\\"')
+        return f'{k}="{escaped}"'
+    return None
+
+def _write_influx(stream: dict, payload: dict) -> None:
+    """Best-effort InfluxDB write — runs in the publisher thread, no blocking."""
     try:
         import urllib.request
-        asset=stream.get("asset_id","plant"); atype=stream.get("asset_type","generic")
-        lines=[]
-        for k,v in payload.items():
-            if k=="timestamp" or isinstance(v,(dict,list,str,bool)): continue
-            meas=f"aurora_{stream['id']}"
-            lines.append(f"{meas},asset_id={asset},asset_type={atype},stream={stream['id']} {k}={v}")
-        if not lines: return
-        data="\n".join(lines).encode()
-        req=urllib.request.Request(f"{INFLUX_URL}/api/v2/write?org={INFLUX_ORG}&bucket={INFLUX_BUCKET}&precision=s",
-            data=data,method="POST",headers={"Authorization":f"Token {INFLUX_TOKEN}","Content-Type":"text/plain; charset=utf-8"})
-        urllib.request.urlopen(req,timeout=2)
-    except: pass
+        asset_id  = _escape_tag(stream.get("asset_id", "plant"))
+        asset_type= _escape_tag(stream.get("asset_type", "generic"))
+        area      = _escape_tag(stream.get("area", "plant"))
+        source    = _escape_tag(stream.get("source", ""))
+        scenario  = _escape_tag(STATE.active_scenario)
+        measurement = _influx_measurement(stream["id"])
+
+        # Build tag set (low-cardinality identifiers)
+        tags = (f"asset_id={asset_id}"
+                f",asset_type={asset_type}"
+                f",area={area}"
+                f",source={source}"
+                f",scenario={scenario}")
+
+        # Build field set — flatten numeric + string scalars; skip dicts/lists
+        fields = []
+        for k, v in payload.items():
+            if k == "timestamp":
+                continue
+            if isinstance(v, (dict, list)):
+                # Flatten one level: e.g. phases.A.current_a
+                if isinstance(v, dict):
+                    for sk, sv in v.items():
+                        f = _influx_field(f"{k}_{sk}", sv)
+                        if f:
+                            fields.append(f)
+                continue
+            f = _influx_field(k, v)
+            if f:
+                fields.append(f)
+
+        if not fields:
+            return
+
+        ts = int(time.time())
+        line = f"{measurement},{tags} {','.join(fields)} {ts}"
+        data = line.encode()
+        url  = (f"{INFLUX_URL}/api/v2/write"
+                f"?org={INFLUX_ORG}&bucket={INFLUX_BUCKET}&precision=s")
+        req  = urllib.request.Request(
+            url, data=data, method="POST",
+            headers={
+                "Authorization": f"Token {INFLUX_TOKEN}",
+                "Content-Type":  "text/plain; charset=utf-8",
+            }
+        )
+        urllib.request.urlopen(req, timeout=2)
+    except Exception:
+        pass
 
 @contextlib.asynccontextmanager
 async def lifespan(_app):
@@ -237,7 +336,12 @@ def _status_dict():
             "last_ts":STATE.stream_last_ts.get(s["id"]),
             "pub_count":STATE.stream_pub_count.get(s["id"],0)} for s in STREAMS],
         "scenarios":[{"id":k,"label":v["label"],"description":v["description"],
-            "affected":v.get("affected",[]),"ai_hint":v.get("ai_hint","")} for k,v in FAULT_SCENARIOS.items()],
+            "affected":v.get("affected",[]),"ai_hint":v.get("ai_hint",""),
+            "data_sources":v.get("data_sources",[]),"kpi_impact":v.get("kpi_impact",{}),
+            "what_it_shows":v.get("what_it_shows",""),"how_to_demo":v.get("how_to_demo",""),
+            "steps":v.get("steps",[]),"visual_indicators":v.get("visual_indicators",""),
+            "root_cause":v.get("root_cause",""),"ai_answer":v.get("ai_answer",""),
+            "affected_streams":v.get("affected_streams",[])} for k,v in FAULT_SCENARIOS.items()],
         "recent_messages":list(STATE.recent_messages)[-50:]}
 
 @app.get("/health")
