@@ -191,30 +191,60 @@
     </template>
   </div>
   <!-- Scenario Detail Panel -->
-  <div x-show="scenarioDetail" x-cloak class="mt-3 rounded-lg border border-slate-700 bg-slate-900 p-4">
-    <div class="flex items-start justify-between gap-4 flex-wrap">
-      <div class="flex-1 min-w-0">
-        <div class="text-sm font-bold text-white mb-1" x-text="scenarioDetail&&scenarioDetail.label"></div>
-        <div class="text-xs text-slate-300 mb-3" x-text="scenarioDetail&&scenarioDetail.description"></div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div>
-            <div class="text-xs font-bold text-blue-400 mb-1">📺 What it shows</div>
-            <div class="text-xs text-slate-300" x-text="scenarioDetail&&scenarioDetail.what_it_shows"></div>
+  <div x-show="scenarioDetail" x-cloak class="mt-3 rounded-lg border border-slate-600 bg-slate-900 p-4 space-y-4">
+    <!-- Header -->
+    <div>
+      <div class="text-sm font-bold text-white mb-0.5" x-text="scenarioDetail&&scenarioDetail.label"></div>
+      <div class="text-xs text-slate-400" x-text="scenarioDetail&&scenarioDetail.description"></div>
+    </div>
+    <!-- KPI row -->
+    <div class="flex gap-5 flex-wrap">
+      <div class="text-xs"><span class="text-slate-500">OEE </span><span class="font-mono font-bold" :class="(scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.oee||79)>=75?'text-emerald-400':'text-amber-400'" x-text="(scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.oee||'–')+'%'"></span></div>
+      <div class="text-xs"><span class="text-slate-500">Energy </span><span class="font-mono text-cyan-400" x-text="scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.energy||'–'"></span></div>
+      <div class="text-xs"><span class="text-slate-500">Quality </span><span class="font-mono" :class="(scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.quality||98)>=95?'text-emerald-400':'text-amber-400'" x-text="(scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.quality||'–')+'%'"></span></div>
+      <template x-if="scenarioDetail&&scenarioDetail.data_sources&&scenarioDetail.data_sources.length">
+        <div class="text-xs text-slate-500">Systems: <span class="text-slate-300" x-text="scenarioDetail.data_sources.join(' · ')"></span></div>
+      </template>
+    </div>
+    <!-- 3-col grid: What / How / Visual -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div class="bg-slate-800 rounded p-3">
+        <div class="text-xs font-bold text-blue-400 mb-1">📺 What it shows</div>
+        <div class="text-xs text-slate-300 leading-relaxed" x-text="scenarioDetail&&scenarioDetail.what_it_shows"></div>
+      </div>
+      <div class="bg-slate-800 rounded p-3">
+        <div class="text-xs font-bold text-emerald-400 mb-1">🎬 Demo steps</div>
+        <template x-if="scenarioDetail&&scenarioDetail.steps&&scenarioDetail.steps.length">
+          <ol class="list-decimal list-inside space-y-0.5">
+            <template x-for="(step,i) in scenarioDetail.steps" :key="i">
+              <li class="text-xs text-slate-300" x-text="step"></li>
+            </template>
+          </ol>
+        </template>
+        <div x-show="!(scenarioDetail&&scenarioDetail.steps&&scenarioDetail.steps.length)" class="text-xs text-slate-300" x-text="scenarioDetail&&scenarioDetail.how_to_demo"></div>
+      </div>
+      <div class="bg-slate-800 rounded p-3">
+        <div class="text-xs font-bold text-purple-400 mb-1">👁 Visual indicators</div>
+        <div class="text-xs text-slate-300 leading-relaxed" x-text="scenarioDetail&&scenarioDetail.visual_indicators"></div>
+      </div>
+    </div>
+    <!-- Root cause + affected streams -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="bg-slate-800 rounded p-3">
+        <div class="text-xs font-bold text-red-400 mb-1">🔍 Root cause</div>
+        <div class="text-xs text-slate-300 leading-relaxed" x-text="scenarioDetail&&scenarioDetail.root_cause"></div>
+        <template x-if="scenarioDetail&&scenarioDetail.affected_streams&&scenarioDetail.affected_streams.length">
+          <div class="mt-2">
+            <div class="text-xs font-bold text-slate-500 mb-1">UNS streams to watch</div>
+            <template x-for="(s,i) in scenarioDetail.affected_streams" :key="i">
+              <div class="text-xs font-mono text-cyan-300 leading-tight" x-text="s"></div>
+            </template>
           </div>
-          <div>
-            <div class="text-xs font-bold text-emerald-400 mb-1">🎬 How to demo</div>
-            <div class="text-xs text-slate-300" x-text="scenarioDetail&&scenarioDetail.how_to_demo"></div>
-          </div>
-          <div>
-            <div class="text-xs font-bold text-amber-400 mb-1">🤖 AI question to ask</div>
-            <div class="text-xs text-amber-200 italic" x-text="scenarioDetail&&scenarioDetail.ai_opportunity"></div>
-          </div>
-        </div>
-        <div class="flex gap-4 mt-3 flex-wrap" x-show="scenarioDetail&&scenarioDetail.kpi_impact">
-          <div class="text-xs"><span class="text-slate-500">OEE:</span> <span class="font-mono font-bold" :class="(scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.oee||79)>=75?'text-emerald-400':'text-amber-400'" x-text="scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.oee+'%'"></span></div>
-          <div class="text-xs"><span class="text-slate-500">Energy:</span> <span class="font-mono text-cyan-400" x-text="scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.energy"></span></div>
-          <div class="text-xs"><span class="text-slate-500">Quality:</span> <span class="font-mono" :class="(scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.quality||98)>=95?'text-emerald-400':'text-amber-400'" x-text="scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.quality+'%'"></span></div>
-        </div>
+        </template>
+      </div>
+      <div class="bg-slate-800 rounded p-3">
+        <div class="text-xs font-bold text-amber-400 mb-1">🤖 AI answer</div>
+        <div class="text-xs text-slate-200 leading-relaxed whitespace-pre-wrap" x-text="scenarioDetail&&scenarioDetail.ai_answer"></div>
       </div>
     </div>
   </div>
