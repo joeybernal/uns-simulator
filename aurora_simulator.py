@@ -295,7 +295,44 @@ async def _update_terminus_scenario(old_id: str, new_id: str) -> None:
             with _ur.urlopen(req, timeout=5) as r:
                 return r.status
 
-        # 1. Create ScenarioEvent document
+        def _get(url):
+            req = _ur.Request(url, headers={"Authorization": auth})
+            with _ur.urlopen(req, timeout=5) as r:
+                raw = r.read().decode()
+            result = []
+            for line in raw.strip().split("\n"):
+                if line.strip():
+                    try: result.append(json.loads(line))
+                    except Exception: pass
+            return result
+
+        # 1. Close previous open ScenarioEvent (set deactivated_at + duration_s)
+        try:
+            events_raw = _get(f"{base}?type=ScenarioEvent&count=50")
+            open_events = [
+                e for e in events_raw
+                if e.get("scenario", "").endswith(f"/{old_id}")
+                and "deactivated_at" not in e
+            ]
+            for ev in open_events:
+                ev_id = ev["@id"]
+                activated = ev.get("activated_at", now_iso)
+                try:
+                    import datetime as _dt2
+                    t0 = _dt2.datetime.fromisoformat(activated.replace("Z", "+00:00"))
+                    t1 = _dt2.datetime.now(_dt2.timezone.utc)
+                    dur = int((t1 - t0).total_seconds())
+                except Exception:
+                    dur = None
+                closed = dict(ev)
+                closed["deactivated_at"] = now_iso
+                if dur is not None:
+                    closed["duration_s"] = dur
+                _put(f"{base}?author=aurora-sim&message=scenario+deactivated+{old_id}", closed)
+        except Exception as ce:
+            print(f"[terminus] could not close old events: {ce}")
+
+        # 2. Create new ScenarioEvent document
         event_doc = {
             "@type": "ScenarioEvent",
             "scenario": {"@type": "@id", "@id": f"FaultScenario/{new_id}"},
