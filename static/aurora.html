@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Aurora Industries — UNS Simulator</title>
+<title>Aurora Industries — UNS Simulator v2</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <style>
@@ -13,154 +13,227 @@
   ::-webkit-scrollbar-track{background:#1e293b}
   ::-webkit-scrollbar-thumb{background:#475569;border-radius:3px}
   .card{background:#0f1d2e;border:1px solid #1e3a5f;border-radius:10px}
+  .card-red{background:#0f1d2e;border:1px solid #7f1d1d;border-radius:10px}
   .card-amber{background:#0f1d2e;border:1px solid #92400e;border-radius:10px}
-  .badge-PLC  {background:#1e3a5f;color:#93c5fd;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700}
-  .badge-MES  {background:#3b1f5f;color:#c4b5fd;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700}
-  .badge-AI   {background:#14432a;color:#6ee7b7;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700}
-  .badge-SCADA{background:#3b2a00;color:#fcd34d;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700}
-  .badge-press    {background:#1a2e4a;color:#60a5fa;font-size:10px;padding:1px 6px;border-radius:4px}
-  .badge-oven     {background:#3b1a00;color:#fb923c;font-size:10px;padding:1px 6px;border-radius:4px}
-  .badge-conveyor {background:#0f2e1a;color:#4ade80;font-size:10px;padding:1px 6px;border-radius:4px}
-  .badge-robot    {background:#2e1a3b;color:#e879f9;font-size:10px;padding:1px 6px;border-radius:4px}
-  .badge-sprayer  {background:#1a2e2e;color:#22d3ee;font-size:10px;padding:1px 6px;border-radius:4px}
-  .badge-compressor{background:#2e2000;color:#facc15;font-size:10px;padding:1px 6px;border-radius:4px}
-  .badge-inspection{background:#1e1e1e;color:#a1a1aa;font-size:10px;padding:1px 6px;border-radius:4px}
-  .badge-plant    {background:#1a1a3b;color:#818cf8;font-size:10px;padding:1px 6px;border-radius:4px}
-  .badge-line     {background:#1a1a3b;color:#6366f1;font-size:10px;padding:1px 6px;border-radius:4px}
+  .card-green{background:#0f1d2e;border:1px solid #14532d;border-radius:10px}
+  /* source badges */
+  .badge-PLC    {background:#1e3a5f;color:#93c5fd;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap}
+  .badge-MES    {background:#3b1f5f;color:#c4b5fd;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap}
+  .badge-AI     {background:#14432a;color:#6ee7b7;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap}
+  .badge-SCADA  {background:#3b2a00;color:#fcd34d;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap}
+  .badge-ERP    {background:#1e1e3b;color:#a5b4fc;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap}
+  .badge-QMS    {background:#1a2e1a;color:#86efac;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap}
+  .badge-DPP    {background:#2e1a3b;color:#e879f9;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;white-space:nowrap}
+  /* asset type badges */
+  .badge-press    {background:#1a2e4a;color:#60a5fa;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-oven     {background:#3b1a00;color:#fb923c;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-conveyor {background:#0f2e1a;color:#4ade80;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-robot    {background:#2e1a3b;color:#e879f9;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-sprayer  {background:#1a2e2e;color:#22d3ee;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-compressor{background:#2e2000;color:#facc15;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-inspection{background:#1e1e1e;color:#a1a1aa;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-quality  {background:#1a2e1a;color:#86efac;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-rfid     {background:#2e2e00;color:#fde68a;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-environmental{background:#1a1a2e;color:#818cf8;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-plant    {background:#1a1a3b;color:#818cf8;font-size:10px;padding:1px 5px;border-radius:4px}
+  .badge-line     {background:#1a1a3b;color:#6366f1;font-size:10px;padding:1px 5px;border-radius:4px}
+  /* animations */
   .pulse{animation:pulse 1.5s ease-in-out infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  .flash{animation:flash 0.6s ease-out}
-  @keyframes flash{0%{background:#1e3a1e}100%{background:transparent}}
-  .scenario-btn{transition:all .15s;cursor:pointer;border-radius:8px;padding:8px 12px;font-size:13px;border:1px solid #1e3a5f;background:#0d1b2a;color:#93c5fd}
-  .scenario-btn:hover{background:#1e3a5f;color:#fff}
-  .scenario-btn.active{background:#1e4d8c;border-color:#3b82f6;color:#fff;font-weight:600}
-  .scenario-btn.active-fault{background:#4c1d1d;border-color:#ef4444;color:#fca5a5;font-weight:600}
-  .dpp-btn{background:#1a3b1a;border:1px solid #16a34a;color:#4ade80;border-radius:8px;padding:10px 22px;font-weight:700;font-size:14px;cursor:pointer;transition:all .15s}
-  .dpp-btn:hover{background:#14532d;color:#fff}
-  .dpp-btn:active{transform:scale(0.97)}
-  .health-bar{height:6px;border-radius:3px;background:#1e293b}
-  .health-fill{height:6px;border-radius:3px;transition:width .5s}
-  .tab-btn{padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;transition:all .15s}
+  /* scenario buttons */
+  .sc-btn{transition:all .15s;cursor:pointer;border-radius:8px;padding:10px 12px;font-size:13px;border:1px solid #1e3a5f;background:#0d1b2a;color:#93c5fd}
+  .sc-btn:hover{background:#1e3a5f}
+  .sc-btn.active{background:#1e4d8c;border-color:#3b82f6;color:#fff;font-weight:600}
+  .sc-btn.active-fault{background:#4c1d1d;border-color:#ef4444;color:#fca5a5;font-weight:600}
+  /* tab buttons */
+  .tab-btn{padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap}
   .tab-btn.active{background:#1e3a5f;border-color:#3b82f6;color:#93c5fd}
   .tab-btn:not(.active):hover{background:#1a2535}
+  /* health bar */
+  .hbar{height:5px;border-radius:3px;background:#1e293b}
+  .hfill{height:5px;border-radius:3px;transition:width .5s}
+  /* product flow node */
+  .flow-node{border-radius:8px;padding:8px 12px;border:1px solid;font-size:12px;text-align:center;min-width:88px}
+  .flow-ok{background:#0d2a0d;border-color:#166534;color:#4ade80}
+  .flow-warn{background:#2a1a0d;border-color:#92400e;color:#fbbf24}
+  .flow-fault{background:#2a0d0d;border-color:#7f1d1d;color:#f87171}
+  .flow-hold{background:#1a0d2a;border-color:#4c1d95;color:#c4b5fd}
+  .flow-arrow{color:#475569;font-size:18px;margin:0 2px;align-self:center}
+  /* dpp button */
+  .dpp-btn{background:#1a3b1a;border:1px solid #16a34a;color:#4ade80;border-radius:8px;padding:8px 20px;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s}
+  .dpp-btn:hover{background:#14532d}
+  .dpp-btn:disabled{opacity:.5;cursor:not-allowed}
 </style>
 </head>
-<body x-data="auroraApp()" x-init="init()" class="min-h-screen p-4">
+<body x-data="auroraApp()" x-init="init()" class="min-h-screen p-3">
 
-<!-- ── HEADER ─────────────────────────────────────────────────────────────── -->
-<div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+<!-- ── HEADER ──────────────────────────────────────────────────────────────── -->
+<div class="flex items-center justify-between mb-3 flex-wrap gap-2">
   <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-lg bg-blue-900 flex items-center justify-center text-xl">⚡</div>
+    <div class="w-9 h-9 rounded-lg bg-blue-900 flex items-center justify-center text-lg">⚡</div>
     <div>
-      <h1 class="text-lg font-bold text-white">Aurora Industries — UNS Simulator</h1>
-      <p class="text-xs text-slate-400">Battery Case Plant · Leipzig DE · <span x-text="streams.length"></span> streams · <span class="text-emerald-400" x-text="currentProduct"></span></p>
+      <h1 class="text-base font-bold text-white leading-tight">Aurora Industries — UNS Simulator <span class="text-xs text-slate-500 font-normal">v2</span></h1>
+      <p class="text-xs text-slate-400">Battery Case Plant · Leipzig DE · <span class="font-mono" x-text="streams.length"></span> streams · <span class="text-emerald-400 font-mono" x-text="currentProduct"></span></p>
     </div>
   </div>
   <div class="flex items-center gap-2 flex-wrap">
-    <!-- Nav to IoTAuto -->
-    <a href="http://localhost:8080" target="_blank" class="text-xs text-slate-400 hover:text-slate-200 border border-slate-700 rounded px-2 py-1">← IoTAuto Sim</a>
-    <span class="text-xs px-2 py-1 rounded" :class="mqttOk ? 'bg-emerald-900 text-emerald-300' : 'bg-red-900 text-red-300 pulse'" x-text="mqttOk ? '● MQTT' : '○ MQTT'"></span>
-    <span class="text-xs px-2 py-1 rounded" :class="running ? 'bg-blue-900 text-blue-300' : 'bg-slate-700 text-slate-400'" x-text="running ? '▶ Running' : '■ Stopped'"></span>
-    <span class="text-xs text-slate-400" x-text="rate + ' msg/s'"></span>
-    <span class="text-xs text-slate-500" x-text="'Shift ' + shift"></span>
+    <a href="http://localhost:8080" target="_blank" class="text-xs text-slate-500 hover:text-slate-200 border border-slate-700 rounded px-2 py-1">← IoTAuto</a>
+    <span class="text-xs px-2 py-1 rounded font-mono" :class="mqttOk?'bg-emerald-900 text-emerald-300':'bg-red-900 text-red-300 pulse'" x-text="mqttOk?'● MQTT':'○ MQTT'"></span>
+    <span class="text-xs px-2 py-1 rounded" :class="running?'bg-blue-900 text-blue-300':'bg-slate-700 text-slate-400'" x-text="running?'▶ Running':'■ Stopped'"></span>
+    <span class="text-xs text-slate-400 font-mono" x-text="rate+' msg/s'"></span>
+    <span class="text-xs text-slate-500" x-text="'Shift '+shift"></span>
     <button @click="apiPost('/api/start')" class="text-xs bg-blue-800 hover:bg-blue-700 text-white px-3 py-1 rounded">Start</button>
     <button @click="apiPost('/api/stop')" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded">Stop</button>
     <button @click="apiPost('/api/reset')" class="text-xs bg-amber-900 hover:bg-amber-800 text-amber-200 px-3 py-1 rounded">Reset</button>
   </div>
 </div>
 
-<!-- ── KPI STRIP ──────────────────────────────────────────────────────────── -->
-<div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-  <div class="card p-3">
-    <div class="text-xs text-slate-400 mb-1">Total Published</div>
-    <div class="text-xl font-bold text-white" x-text="totalPublished.toLocaleString()"></div>
+<!-- ── KPI STRIP ───────────────────────────────────────────────────────────── -->
+<div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-3">
+  <div class="card p-2">
+    <div class="text-xs text-slate-500">Published</div>
+    <div class="text-lg font-bold text-white font-mono" x-text="totalPublished.toLocaleString()"></div>
   </div>
-  <div class="card p-3">
-    <div class="text-xs text-slate-400 mb-1">Plant OEE</div>
-    <div class="text-xl font-bold" :class="oee > 75 ? 'text-emerald-400' : 'text-amber-400'" x-text="oee + '%'"></div>
+  <div class="card p-2">
+    <div class="text-xs text-slate-500">Plant OEE</div>
+    <div class="text-lg font-bold font-mono" :class="oee>75?'text-emerald-400':'text-amber-400'" x-text="oee+'%'"></div>
   </div>
-  <div class="card p-3">
-    <div class="text-xs text-slate-400 mb-1">Plant Power</div>
-    <div class="text-xl font-bold text-cyan-400" x-text="plantKw + ' kW'"></div>
+  <div class="card p-2">
+    <div class="text-xs text-slate-500">Plant Power</div>
+    <div class="text-lg font-bold text-cyan-400 font-mono" x-text="plantKw+' kW'"></div>
   </div>
-  <div class="card p-3">
-    <div class="text-xs text-slate-400 mb-1">Units / Batch</div>
-    <div class="text-xl font-bold text-purple-400" x-text="unitSeq"></div>
-    <div class="text-xs text-slate-500 truncate" x-text="currentBatch"></div>
+  <div class="card p-2">
+    <div class="text-xs text-slate-500">Units / FPY</div>
+    <div class="text-lg font-bold text-purple-400 font-mono" x-text="unitSeq"></div>
+    <div class="text-xs text-slate-500 font-mono" x-text="fpy+'%'"></div>
   </div>
-  <div class="card p-3">
-    <div class="text-xs text-slate-400 mb-1">Active Scenario</div>
-    <div class="text-sm font-bold" :class="activeScenario==='normal'?'text-emerald-400':'text-red-400'" x-text="scenarioLabel"></div>
+  <div class="card p-2">
+    <div class="text-xs text-slate-500">Scrap / Rework</div>
+    <div class="text-base font-bold font-mono">
+      <span class="text-red-400" x-text="scrapCount"></span>
+      <span class="text-slate-600"> / </span>
+      <span class="text-amber-400" x-text="reworkCount"></span>
+    </div>
+  </div>
+  <div class="card p-2">
+    <div class="text-xs text-slate-500">Scenario</div>
+    <div class="text-xs font-bold leading-tight mt-1" :class="activeScenario==='normal'?'text-emerald-400':'text-red-400'" x-text="scenarioLabel"></div>
   </div>
 </div>
 
-<!-- ── AI HINT PANEL ──────────────────────────────────────────────────────── -->
-<div x-show="aiHint" x-cloak class="card-amber p-3 mb-4 flex gap-3 items-start">
-  <span class="text-2xl">🤖</span>
-  <div>
-    <div class="text-xs font-bold text-amber-300 mb-1">AI Analysis Hint (for demo)</div>
+<!-- ── AI HINT ─────────────────────────────────────────────────────────────── -->
+<div x-show="aiHint" x-cloak class="card-amber p-3 mb-3 flex gap-3 items-start">
+  <span class="text-xl shrink-0">🤖</span>
+  <div class="min-w-0">
+    <div class="text-xs font-bold text-amber-300 mb-1">AI Analysis Hint</div>
     <div class="text-sm text-amber-100" x-text="aiHint"></div>
   </div>
 </div>
 
-<!-- ── DPP TRIGGER ────────────────────────────────────────────────────────── -->
-<div class="card p-4 mb-4">
-  <div class="flex items-center justify-between flex-wrap gap-3">
-    <div>
-      <div class="text-sm font-bold text-white mb-1">🏭 Digital Product Passport — Manual Trigger</div>
-      <div class="text-xs text-slate-400">Fires <code class="text-slate-300 bg-slate-800 px-1 rounded">aurora/line_04_inspection/cell_02/process/step_status</code> with <span class="text-emerald-400">result=pass</span> for current batch</div>
-    </div>
-    <div class="flex items-center gap-3">
+<!-- ── PRODUCT FLOW ────────────────────────────────────────────────────────── -->
+<div class="card p-3 mb-3">
+  <div class="flex items-center justify-between mb-2">
+    <div class="text-sm font-bold text-white">🏭 Product Flow — <span class="text-slate-400 font-normal text-xs" x-text="currentBatch+' · '+currentProduct"></span></div>
+    <div class="flex items-center gap-2">
       <button @click="triggerDpp()" class="dpp-btn" :disabled="dppTriggered">
-        <span x-text="dppTriggered ? '✓ DPP Sent!' : '🚀 Trigger DPP'"></span>
+        <span x-text="dppTriggered?'✓ DPP Sent!':'🚀 Trigger DPP'"></span>
       </button>
-      <div x-show="dppHistory.length > 0" class="text-xs text-slate-400">
-        Last: <span class="text-emerald-300" x-text="dppHistory.length > 0 ? dppHistory[dppHistory.length-1].batch_id : ''"></span>
+      <div x-show="dppHistory.length>0" class="text-xs text-slate-400">
+        Last batch: <span class="text-emerald-300 font-mono" x-text="dppHistory.length>0?dppHistory[dppHistory.length-1].batch_id:''"></span>
       </div>
     </div>
   </div>
-  <div x-show="dppHistory.length > 0" class="mt-3">
-    <div class="text-xs text-slate-500 mb-1">DPP History</div>
-    <div class="flex flex-wrap gap-2">
-      <template x-for="d in dppHistory.slice(-5)" :key="d.timestamp">
-        <span class="text-xs bg-emerald-900 text-emerald-300 px-2 py-1 rounded" x-text="d.batch_id + ' · ' + d.unit_count + ' units'"></span>
-      </template>
-    </div>
+  <!-- Flow nodes -->
+  <div class="flex items-center gap-1 flex-wrap overflow-x-auto pb-1">
+    <template x-for="node in productFlow" :key="node.id">
+      <div class="flex items-center gap-1">
+        <div class="flow-node" :class="node.status==='fault'?'flow-fault':(node.status==='hold'?'flow-hold':(node.status==='warn'?'flow-warn':'flow-ok'))">
+          <div class="font-bold text-xs" x-text="node.label"></div>
+          <div class="text-xs opacity-70 mt-0.5" x-text="node.sub"></div>
+        </div>
+        <div x-show="!node.last" class="flow-arrow">→</div>
+      </div>
+    </template>
+  </div>
+  <!-- MES / ERP status bar -->
+  <div class="flex gap-3 mt-2 flex-wrap">
+    <div class="text-xs"><span class="text-slate-500">Order:</span> <span class="text-purple-300 font-mono" x-text="orderId"></span></div>
+    <div class="text-xs"><span class="text-slate-500">WO:</span> <span class="text-indigo-300 font-mono" x-text="woId"></span></div>
+    <div class="text-xs"><span class="text-slate-500">Batch:</span> <span :class="batchStatus==='ON_HOLD'?'text-amber-300':'text-emerald-300'" class="font-mono" x-text="batchStatus"></span></div>
+    <div class="text-xs"><span class="text-slate-500">Customer:</span> <span class="text-slate-300" x-text="customerId"></span></div>
+    <div class="text-xs text-red-400 font-bold" x-show="erpAlert" x-text="'⚠ '+erpAlert"></div>
+    <div class="text-xs text-purple-300" x-show="qualityHolds>0" x-text="'🔒 '+qualityHolds+' quality hold(s) active'"></div>
   </div>
 </div>
 
-<!-- ── SCENARIOS ─────────────────────────────────────────────────────────── -->
-<div class="card p-4 mb-4">
-  <div class="text-sm font-bold text-white mb-3">🎭 AI Demo Scenarios</div>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+<!-- ── SCENARIOS ──────────────────────────────────────────────────────────── -->
+<div class="card p-3 mb-3">
+  <div class="text-sm font-bold text-white mb-2">🎭 AI Demo Scenarios <span class="text-xs text-slate-500 font-normal">(15 scenarios · click to activate)</span></div>
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
     <template x-for="sc in scenarios" :key="sc.id">
-      <div @click="setScenario(sc.id)"
-           class="scenario-btn"
-           :class="activeScenario === sc.id ? (sc.id === 'normal' ? 'active' : 'active-fault') : ''">
-        <div class="font-semibold text-sm" x-text="sc.label"></div>
-        <div class="text-xs mt-1 opacity-70 line-clamp-2" x-text="sc.description"></div>
-        <div x-show="sc.affected.length > 0" class="flex gap-1 mt-1 flex-wrap">
+      <div class="sc-btn"
+           :class="activeScenario===sc.id?(sc.id==='normal'?'active':'active-fault'):''"
+           @click="setScenario(sc.id)">
+        <div class="font-semibold text-sm leading-tight" x-text="sc.label"></div>
+        <div class="text-xs mt-1 opacity-60 line-clamp-2" x-text="sc.description"></div>
+        <!-- data source badges -->
+        <div class="flex gap-1 mt-1 flex-wrap">
+          <template x-for="ds in (sc.data_sources||[])" :key="ds">
+            <span :class="'badge-'+ds" x-text="ds"></span>
+          </template>
+        </div>
+        <div x-show="sc.affected&&sc.affected.length>0" class="flex gap-1 mt-1 flex-wrap">
           <template x-for="a in sc.affected" :key="a">
-            <span class="text-xs bg-red-900 text-red-300 px-1 rounded" x-text="a"></span>
+            <span class="text-xs bg-red-900 text-red-300 px-1 rounded font-mono" x-text="a"></span>
           </template>
         </div>
       </div>
     </template>
   </div>
+  <!-- Scenario Detail Panel -->
+  <div x-show="scenarioDetail" x-cloak class="mt-3 rounded-lg border border-slate-700 bg-slate-900 p-4">
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-bold text-white mb-1" x-text="scenarioDetail&&scenarioDetail.label"></div>
+        <div class="text-xs text-slate-300 mb-3" x-text="scenarioDetail&&scenarioDetail.description"></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <div class="text-xs font-bold text-blue-400 mb-1">📺 What it shows</div>
+            <div class="text-xs text-slate-300" x-text="scenarioDetail&&scenarioDetail.what_it_shows"></div>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-emerald-400 mb-1">🎬 How to demo</div>
+            <div class="text-xs text-slate-300" x-text="scenarioDetail&&scenarioDetail.how_to_demo"></div>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-amber-400 mb-1">🤖 AI question to ask</div>
+            <div class="text-xs text-amber-200 italic" x-text="scenarioDetail&&scenarioDetail.ai_opportunity"></div>
+          </div>
+        </div>
+        <div class="flex gap-4 mt-3 flex-wrap" x-show="scenarioDetail&&scenarioDetail.kpi_impact">
+          <div class="text-xs"><span class="text-slate-500">OEE:</span> <span class="font-mono font-bold" :class="(scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.oee||79)>=75?'text-emerald-400':'text-amber-400'" x-text="scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.oee+'%'"></span></div>
+          <div class="text-xs"><span class="text-slate-500">Energy:</span> <span class="font-mono text-cyan-400" x-text="scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.energy"></span></div>
+          <div class="text-xs"><span class="text-slate-500">Quality:</span> <span class="font-mono" :class="(scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.quality||98)>=95?'text-emerald-400':'text-amber-400'" x-text="scenarioDetail&&scenarioDetail.kpi_impact&&scenarioDetail.kpi_impact.quality+'%'"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- ── TABS ───────────────────────────────────────────────────────────────── -->
-<div class="flex gap-2 mb-3">
-  <button class="tab-btn" :class="tab==='streams'&&'active'" @click="tab='streams'">📡 Live Streams</button>
+<!-- ── TABS ────────────────────────────────────────────────────────────────── -->
+<div class="flex gap-1 mb-3 overflow-x-auto">
+  <button class="tab-btn" :class="tab==='streams'&&'active'" @click="tab='streams'">📡 Streams</button>
   <button class="tab-btn" :class="tab==='energy'&&'active'" @click="tab='energy'">⚡ Energy</button>
   <button class="tab-btn" :class="tab==='health'&&'active'" @click="tab='health'">🔧 Health</button>
-  <button class="tab-btn" :class="tab==='messages'&&'active'" @click="tab='messages'">📨 Message Feed</button>
+  <button class="tab-btn" :class="tab==='quality'&&'active'" @click="tab='quality'">📐 Quality</button>
+  <button class="tab-btn" :class="tab==='erp'&&'active'" @click="tab='erp'">🏢 ERP/MES</button>
+  <button class="tab-btn" :class="tab==='messages'&&'active'" @click="tab='messages'">📨 Feed</button>
 </div>
 
-<!-- ── STREAMS TAB ────────────────────────────────────────────────────────── -->
+<!-- ── STREAMS TAB ─────────────────────────────────────────────────────────── -->
 <div x-show="tab==='streams'" x-cloak>
   <div class="mb-2 flex gap-2 flex-wrap items-center">
-    <input x-model="streamFilter" placeholder="Filter streams…" class="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 w-48"/>
+    <input x-model="streamFilter" placeholder="Filter…" class="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 w-40"/>
     <select x-model="areaFilter" class="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
       <option value="">All areas</option>
       <template x-for="a in uniqueAreas" :key="a"><option :value="a" x-text="a"></option></template>
@@ -169,38 +242,36 @@
       <option value="">All types</option>
       <template x-for="t in uniqueTypes" :key="t"><option :value="t" x-text="t"></option></template>
     </select>
-    <span class="text-xs text-slate-500" x-text="filteredStreams.length + ' / ' + streams.length + ' streams'"></span>
+    <select x-model="sourceFilter" class="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+      <option value="">All sources</option>
+      <template x-for="s in uniqueSources" :key="s"><option :value="s" x-text="s"></option></template>
+    </select>
+    <span class="text-xs text-slate-500 font-mono" x-text="filteredStreams.length+' / '+streams.length"></span>
   </div>
-  <div class="overflow-x-auto">
+  <div class="overflow-x-auto rounded-lg border border-slate-800">
     <table class="w-full text-xs">
       <thead>
-        <tr class="text-slate-500 border-b border-slate-800">
+        <tr class="text-slate-500 border-b border-slate-800 bg-slate-900">
           <th class="text-left p-2">Label</th>
           <th class="text-left p-2">Type</th>
           <th class="text-left p-2">Source</th>
-          <th class="text-left p-2">Area</th>
+          <th class="text-left p-2 hidden md:table-cell">Area</th>
           <th class="text-left p-2">Value</th>
-          <th class="text-left p-2 hidden md:table-cell">Topic</th>
+          <th class="text-left p-2 hidden lg:table-cell">Topic</th>
           <th class="text-right p-2">Msgs</th>
         </tr>
       </thead>
       <tbody>
         <template x-for="s in filteredStreams" :key="s.id">
-          <tr class="border-b border-slate-800 hover:bg-slate-800/30"
-              :class="isAffected(s.asset_id) ? 'bg-red-950/30' : ''">
-            <td class="p-2">
-              <span class="text-slate-200" x-text="s.label"></span>
-            </td>
-            <td class="p-2">
-              <span :class="'badge-'+s.asset_type" x-text="s.asset_type || '—'"></span>
-            </td>
-            <td class="p-2">
-              <span :class="'badge-'+s.source" x-text="s.source"></span>
-            </td>
-            <td class="p-2 text-slate-400 hidden md:table-cell" x-text="s.area"></td>
-            <td class="p-2 font-mono font-bold text-cyan-300" x-text="s.value || '—'"></td>
-            <td class="p-2 text-slate-600 font-mono text-xs hidden md:table-cell truncate max-w-xs" x-text="s.topic"></td>
-            <td class="p-2 text-right text-slate-400" x-text="s.pub_count"></td>
+          <tr class="border-b border-slate-800 hover:bg-slate-800/30 transition-colors"
+              :class="isAffected(s.asset_id)?'bg-red-950/20':''">
+            <td class="p-2 text-slate-200" x-text="s.label"></td>
+            <td class="p-2"><span :class="'badge-'+s.asset_type" x-text="s.asset_type||'—'"></span></td>
+            <td class="p-2"><span :class="'badge-'+s.source" x-text="s.source"></span></td>
+            <td class="p-2 text-slate-500 hidden md:table-cell text-xs" x-text="s.area"></td>
+            <td class="p-2 font-mono font-bold text-cyan-300" x-text="s.value||'—'"></td>
+            <td class="p-2 text-slate-700 font-mono hidden lg:table-cell truncate max-w-xs" x-text="s.topic"></td>
+            <td class="p-2 text-right text-slate-500 font-mono" x-text="s.pub_count"></td>
           </tr>
         </template>
       </tbody>
@@ -208,228 +279,435 @@
   </div>
 </div>
 
-<!-- ── ENERGY TAB ─────────────────────────────────────────────────────────── -->
+<!-- ── ENERGY TAB ──────────────────────────────────────────────────────────── -->
 <div x-show="tab==='energy'" x-cloak>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+  <!-- Plant summary -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+    <div class="card p-3 text-center">
+      <div class="text-xs text-slate-500 mb-1">Plant Total kW</div>
+      <div class="text-2xl font-bold text-cyan-400 font-mono" x-text="plantKw"></div>
+    </div>
+    <div class="card p-3 text-center">
+      <div class="text-xs text-slate-500 mb-1">Total kWh (session)</div>
+      <div class="text-2xl font-bold text-cyan-300 font-mono" x-text="plantKwh.toLocaleString()"></div>
+    </div>
+    <div class="card p-3 text-center">
+      <div class="text-xs text-slate-500 mb-1">CO₂ Today (kg)</div>
+      <div class="text-2xl font-bold text-green-400 font-mono" x-text="co2Today.toLocaleString()"></div>
+    </div>
+    <div class="card p-3 text-center">
+      <div class="text-xs text-slate-500 mb-1">Cost Today (€)</div>
+      <div class="text-2xl font-bold text-yellow-400 font-mono" x-text="costToday.toLocaleString()"></div>
+    </div>
+  </div>
+  <!-- 3-phase power table -->
+  <div class="card p-3 mb-3">
+    <div class="text-sm font-bold text-white mb-2">⚡ 3-Phase Power by Asset</div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead><tr class="text-slate-500 border-b border-slate-800">
+          <th class="text-left p-2">Asset</th><th class="text-left p-2">Type</th>
+          <th class="text-right p-2">Total kW</th><th class="text-right p-2">PF</th>
+          <th class="text-right p-2">THD%</th><th class="text-right p-2">Msgs</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="s in powerStreams" :key="s.id">
+            <tr class="border-b border-slate-800 hover:bg-slate-800/30" :class="isAffected(s.asset_id)?'bg-red-950/20':''">
+              <td class="p-2 font-mono text-slate-200" x-text="s.asset_id"></td>
+              <td class="p-2"><span :class="'badge-'+s.asset_type" x-text="s.asset_type"></span></td>
+              <td class="p-2 text-right font-bold font-mono text-cyan-300" x-text="s.value"></td>
+              <td class="p-2 text-right text-slate-400 font-mono" x-text="s.pf||'—'"></td>
+              <td class="p-2 text-right" :class="(s.thd||0)>5?'text-amber-400':'text-slate-400'" x-text="s.thd||'—'"></td>
+              <td class="p-2 text-right text-slate-500 font-mono" x-text="s.pub_count"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- Energy rollup cards -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
     <template x-for="s in energyStreams" :key="s.id">
-      <div class="card p-3" :class="isAffected(s.asset_id) ? 'border-red-800' : ''">
-        <div class="flex justify-between items-start mb-2">
-          <div>
-            <div class="text-sm font-bold text-white" x-text="s.asset_id || s.label"></div>
-            <span :class="'badge-'+s.asset_type" x-text="s.asset_type"></span>
-          </div>
-          <div class="text-right">
-            <div class="text-lg font-bold text-cyan-400" x-text="s.value + (s.unit?' '+s.unit:'')"></div>
-            <div class="text-xs text-slate-500" x-text="s.pub_count + ' readings'"></div>
-          </div>
-        </div>
-        <div class="text-xs text-slate-600 font-mono truncate" x-text="s.topic"></div>
+      <div class="card p-3" :class="isAffected(s.asset_id)?'border-red-800':''">
+        <div class="text-xs font-bold text-white truncate" x-text="s.asset_id||s.label"></div>
+        <span :class="'badge-'+s.asset_type" x-text="s.asset_type"></span>
+        <div class="text-lg font-bold text-cyan-400 font-mono mt-1" x-text="s.value+' kW'"></div>
+        <div class="text-xs text-slate-500" x-text="s.pub_count+' readings'"></div>
       </div>
     </template>
   </div>
-  <!-- Energy table summary -->
-  <div class="card p-4 mt-4">
-    <div class="text-sm font-bold text-white mb-3">⚡ 3-Phase Power Streams</div>
-    <table class="w-full text-xs">
-      <thead><tr class="text-slate-500 border-b border-slate-800">
-        <th class="text-left p-2">Asset</th>
-        <th class="text-left p-2">Type</th>
-        <th class="text-right p-2">Last Value</th>
-        <th class="text-right p-2">Msgs</th>
-      </tr></thead>
-      <tbody>
-        <template x-for="s in powerStreams" :key="s.id">
-          <tr class="border-b border-slate-800 hover:bg-slate-800/30" :class="isAffected(s.asset_id)?'bg-red-950/30':''">
-            <td class="p-2 text-slate-200" x-text="s.asset_id"></td>
-            <td class="p-2"><span :class="'badge-'+s.asset_type" x-text="s.asset_type"></span></td>
-            <td class="p-2 text-right font-mono text-cyan-300" x-text="s.value"></td>
-            <td class="p-2 text-right text-slate-400" x-text="s.pub_count"></td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </div>
 </div>
 
-<!-- ── HEALTH TAB ─────────────────────────────────────────────────────────── -->
+<!-- ── HEALTH TAB ──────────────────────────────────────────────────────────── -->
 <div x-show="tab==='health'" x-cloak>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
     <template x-for="s in healthStreams" :key="s.id">
-      <div class="card p-3" :class="isAffected(s.asset_id) ? 'border-red-800' : ''">
+      <div class="card p-3" :class="isAffected(s.asset_id)?'border-red-800':''">
         <div class="flex justify-between items-center mb-2">
-          <div class="text-sm font-bold text-white" x-text="s.asset_id"></div>
+          <div class="text-sm font-bold text-white truncate" x-text="s.asset_id"></div>
           <span :class="'badge-'+s.asset_type" x-text="s.asset_type"></span>
         </div>
-        <!-- Health bar -->
-        <div class="health-bar mb-1">
-          <div class="health-fill"
-               :style="'width:'+parseHealthScore(s.value)+'%; background:'+healthColor(parseHealthScore(s.value))"></div>
+        <div class="hbar mb-1">
+          <div class="hfill" :style="'width:'+parseH(s.value)+'%;background:'+hcolor(parseH(s.value))"></div>
         </div>
-        <div class="flex justify-between text-xs">
-          <span class="text-slate-400">Health</span>
-          <span :class="parseHealthScore(s.value) > 70 ? 'text-emerald-400' : 'text-amber-400'" x-text="parseHealthScore(s.value) + '%'"></span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="text-slate-400">Overall Health</span>
+          <span :class="parseH(s.value)>70?'text-emerald-400 font-bold':'text-amber-400 font-bold'" x-text="parseH(s.value)+'%'"></span>
         </div>
-        <div x-show="isAffected(s.asset_id)" class="mt-2 text-xs text-red-400 font-bold">⚠ Scenario active — degrading</div>
+        <div x-show="isAffected(s.asset_id)" class="text-xs text-red-400 font-bold">⚠ Scenario degrading</div>
       </div>
     </template>
   </div>
-  <div class="card p-4 mt-4">
-    <div class="text-sm font-bold text-white mb-3">🤖 Predictive Maintenance Alerts</div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <template x-for="s in pdmStreams" :key="s.id">
-        <div class="flex items-center justify-between p-2 rounded border border-slate-800 hover:bg-slate-800/30">
-          <div>
-            <div class="text-xs font-bold text-slate-200" x-text="s.asset_id"></div>
-            <div class="text-xs text-slate-500" x-text="s.label"></div>
-          </div>
-          <div class="text-right">
-            <div class="text-sm font-bold text-amber-400" x-text="s.value"></div>
-            <div class="text-xs text-slate-500">RUL days</div>
-          </div>
-        </div>
-      </template>
+  <!-- PdM table -->
+  <div class="card p-3">
+    <div class="text-sm font-bold text-white mb-2">🤖 Predictive Maintenance — RUL Summary</div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead><tr class="text-slate-500 border-b border-slate-800">
+          <th class="text-left p-2">Asset</th><th class="text-left p-2">Type</th>
+          <th class="text-right p-2">RUL (days)</th><th class="text-right p-2">Urgency</th><th class="text-right p-2">Msgs</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="s in pdmStreams" :key="s.id">
+            <tr class="border-b border-slate-800 hover:bg-slate-800/30" :class="isAffected(s.asset_id)?'bg-red-950/20':''">
+              <td class="p-2 font-mono text-slate-200" x-text="s.asset_id"></td>
+              <td class="p-2"><span :class="'badge-'+s.asset_type" x-text="s.asset_type"></span></td>
+              <td class="p-2 text-right font-bold font-mono text-amber-400" x-text="s.value"></td>
+              <td class="p-2 text-right">
+                <span class="text-xs px-1 rounded"
+                      :class="s.urgency==='IMMEDIATE'?'bg-red-900 text-red-300':(s.urgency==='SOON'?'bg-amber-900 text-amber-300':'text-emerald-400')"
+                      x-text="s.urgency||'OK'"></span>
+              </td>
+              <td class="p-2 text-right text-slate-500 font-mono" x-text="s.pub_count"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
 
-<!-- ── MESSAGES TAB ───────────────────────────────────────────────────────── -->
-<div x-show="tab==='messages'" x-cloak>
-  <div class="card p-2 max-h-[600px] overflow-y-auto" id="msgFeed">
-    <template x-for="(m, i) in recentMessages.slice().reverse()" :key="i">
-      <div class="flex gap-2 items-start py-1 border-b border-slate-800 text-xs hover:bg-slate-800/20"
-           :class="m.asset_type === 'AI' || m.source === 'AI' ? 'bg-emerald-950/20' : ''">
-        <span class="text-slate-500 w-16 shrink-0" x-text="m.ts"></span>
-        <span :class="'badge-'+m.source" x-text="m.source" class="shrink-0 w-12"></span>
-        <span :class="'badge-'+(m.asset_type||'plant')" x-text="m.asset_type||'—'" class="shrink-0 w-20"></span>
-        <span class="text-slate-300 truncate flex-1" x-text="m.label"></span>
-        <span class="font-mono text-cyan-300 shrink-0 w-20 text-right" x-text="m.value"></span>
-      </div>
-    </template>
-    <div x-show="recentMessages.length === 0" class="text-slate-500 p-4 text-center">No messages yet — click Start</div>
+<!-- ── QUALITY TAB ──────────────────────────────────────────────────────────── -->
+<div x-show="tab==='quality'" x-cloak>
+  <!-- FPY / Scrap summary -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+    <div class="card p-3">
+      <div class="text-xs text-slate-500">First Pass Yield</div>
+      <div class="text-2xl font-bold font-mono" :class="fpy>=95?'text-emerald-400':'text-amber-400'" x-text="fpy+'%'"></div>
+    </div>
+    <div class="card p-3">
+      <div class="text-xs text-slate-500">Scrap</div>
+      <div class="text-2xl font-bold text-red-400 font-mono" x-text="scrapCount"></div>
+    </div>
+    <div class="card p-3">
+      <div class="text-xs text-slate-500">Rework</div>
+      <div class="text-2xl font-bold text-amber-400 font-mono" x-text="reworkCount"></div>
+    </div>
+    <div class="card p-3">
+      <div class="text-xs text-slate-500">Quality Holds</div>
+      <div class="text-2xl font-bold font-mono" :class="qualityHolds>0?'text-purple-400':'text-emerald-400'" x-text="qualityHolds"></div>
+    </div>
+  </div>
+  <!-- SPC Charts -->
+  <div class="card p-3 mb-3">
+    <div class="text-sm font-bold text-white mb-2">📊 SPC Control Charts</div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <template x-for="s in spcStreams" :key="s.id">
+        <div class="rounded-lg border border-slate-800 p-3" :class="s.in_control===false?'border-amber-800':''">
+          <div class="flex justify-between items-center mb-1">
+            <div class="text-xs font-bold text-slate-200" x-text="s.label"></div>
+            <span class="text-xs px-1 rounded font-mono"
+                  :class="s.in_control===false?'bg-amber-900 text-amber-200':'bg-emerald-900 text-emerald-300'"
+                  x-text="s.in_control===false?'OUT OF CONTROL':'In Control'"></span>
+          </div>
+          <div class="flex gap-3 text-xs font-mono">
+            <span class="text-cyan-300">Val: <span x-text="s.value||'—'"></span></span>
+            <span class="text-slate-500">UCL: <span x-text="s.ucl||'—'"></span></span>
+            <span class="text-slate-500">LCL: <span x-text="s.lcl||'—'"></span></span>
+            <span class="text-slate-400">Cpk: <span x-text="s.cpk||'—'"></span></span>
+          </div>
+          <div x-show="s.trend==='UPWARD_DRIFT'" class="text-xs text-amber-400 mt-1">⚠ Upward drift detected</div>
+        </div>
+      </template>
+    </div>
+  </div>
+  <!-- CMM dimensional results -->
+  <div class="card p-3">
+    <div class="text-sm font-bold text-white mb-2">🔬 CMM Inspection Results</div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead><tr class="text-slate-500 border-b border-slate-800">
+          <th class="text-left p-2">Time</th><th class="text-left p-2">Unit</th>
+          <th class="text-left p-2">Method</th><th class="text-right p-2">Result</th>
+          <th class="text-right p-2">Disposition</th>
+        </tr></thead>
+        <tbody>
+          <template x-for="(m,i) in inspectionHistory.slice().reverse().slice(0,20)" :key="i">
+            <tr class="border-b border-slate-800 hover:bg-slate-800/20">
+              <td class="p-2 text-slate-500 font-mono" x-text="m.ts"></td>
+              <td class="p-2 font-mono text-slate-300" x-text="m.unit_id||'—'"></td>
+              <td class="p-2 text-slate-400" x-text="m.method||'—'"></td>
+              <td class="p-2 text-right font-bold" :class="m.result==='PASS'?'text-emerald-400':'text-red-400'" x-text="m.result||'—'"></td>
+              <td class="p-2 text-right text-slate-400" x-text="m.disposition||'—'"></td>
+            </tr>
+          </template>
+          <tr x-show="inspectionHistory.length===0">
+            <td colspan="5" class="p-4 text-center text-slate-500">No inspection data yet</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
-<!-- ── FOOTER ─────────────────────────────────────────────────────────────── -->
-<div class="mt-6 text-xs text-slate-700 flex justify-between flex-wrap gap-2">
-  <span>Aurora Industries UNS Simulator · <a href="/api/status" class="hover:text-slate-400">/api/status</a> · <a href="/api/docs" class="hover:text-slate-400">/api/docs</a></span>
-  <span x-text="'Uptime: ' + formatUptime(uptime) + '  ·  WS clients: ' + wsClients"></span>
+<!-- ── ERP/MES TAB ──────────────────────────────────────────────────────────── -->
+<div x-show="tab==='erp'" x-cloak>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+    <!-- Production Order -->
+    <div class="card p-3">
+      <div class="text-xs font-bold text-purple-300 mb-2">🏢 SAP ERP — Production Order</div>
+      <div class="space-y-1">
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Order ID</span><span class="font-mono text-slate-200" x-text="orderId"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Material</span><span class="font-mono text-slate-200" x-text="currentProduct"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Qty Ordered</span><span class="font-mono text-slate-200">1,000</span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Qty Produced</span><span class="font-mono text-emerald-300" x-text="unitSeq"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Scrap</span><span class="font-mono text-red-400" x-text="scrapCount"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Customer</span><span class="font-mono text-slate-200" x-text="customerId"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Delivery</span><span class="font-mono text-slate-200">2026-04-19</span></div>
+        <div x-show="erpAlert" class="text-xs text-red-400 font-bold mt-1" x-text="'⚠ '+erpAlert"></div>
+      </div>
+      <!-- Progress bar -->
+      <div class="mt-2">
+        <div class="flex justify-between text-xs text-slate-500 mb-1"><span>Progress</span><span x-text="Math.min(100,Math.round(unitSeq/10))+'%'"></span></div>
+        <div class="hbar"><div class="hfill bg-purple-500" :style="'width:'+Math.min(100,Math.round(unitSeq/10))+'%'"></div></div>
+      </div>
+    </div>
+    <!-- MES Batch + WO -->
+    <div class="card p-3">
+      <div class="text-xs font-bold text-indigo-300 mb-2">⚙️ MES — Batch & Work Order</div>
+      <div class="space-y-1">
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Batch ID</span><span class="font-mono text-slate-200" x-text="currentBatch"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Status</span><span class="font-bold font-mono" :class="batchStatus==='ON_HOLD'?'text-amber-400':(batchStatus==='IN_PROGRESS'?'text-emerald-400':'text-slate-200')" x-text="batchStatus"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Work Order</span><span class="font-mono text-slate-200" x-text="woId"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">WO Status</span><span class="font-mono" :class="woStatus==='WAITING_MATERIAL'?'text-amber-400':'text-emerald-400'" x-text="woStatus"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">First Pass Yield</span><span class="font-mono font-bold" :class="fpy>=95?'text-emerald-400':'text-amber-400'" x-text="fpy+'%'"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">OEE (batch)</span><span class="font-mono font-bold text-blue-300" x-text="oee+'%'"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Downtime (min)</span><span class="font-mono text-amber-400" x-text="downtimeMin"></span></div>
+        <div class="flex justify-between text-xs"><span class="text-slate-500">Shift</span><span class="font-mono text-slate-200" x-text="shift"></span></div>
+      </div>
+    </div>
+  </div>
+  <!-- Material consumption -->
+  <div class="card p-3 mb-3">
+    <div class="text-xs font-bold text-green-300 mb-2">📦 ERP Material Consumption</div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <template x-for="mat in materials" :key="mat.id">
+        <div class="rounded border p-2" :class="mat.warning?'border-amber-700 bg-amber-950/30':'border-slate-800'">
+          <div class="text-xs font-mono text-slate-300 truncate" x-text="mat.id"></div>
+          <div class="text-sm font-bold font-mono" :class="mat.warning?'text-amber-300':'text-slate-200'" x-text="mat.value+' kg'"></div>
+          <div x-show="mat.warning" class="text-xs text-amber-400">⚠ Below safety stock</div>
+        </div>
+      </template>
+    </div>
+  </div>
+  <!-- Quality holds -->
+  <div class="card p-3" x-show="qualityHolds>0">
+    <div class="text-xs font-bold text-purple-300 mb-2">🔒 Active Quality Holds</div>
+    <template x-for="hold in activeHolds" :key="hold.hold_id">
+      <div class="rounded border border-purple-800 p-2 mb-2 bg-purple-950/20">
+        <div class="flex justify-between items-center">
+          <span class="font-mono text-xs text-purple-300" x-text="hold.hold_id"></span>
+          <span class="text-xs px-1 rounded" :class="hold.severity==='CRITICAL'?'bg-red-900 text-red-300':'bg-amber-900 text-amber-300'" x-text="hold.severity"></span>
+        </div>
+        <div class="text-xs text-slate-300 mt-1" x-text="hold.reason"></div>
+        <div class="text-xs text-slate-500 mt-0.5" x-text="hold.units_affected+' units affected'"></div>
+      </div>
+    </template>
+  </div>
+  <div class="card p-3 text-center text-slate-500 text-sm" x-show="qualityHolds===0">
+    ✅ No active quality holds
+  </div>
+</div>
+
+<!-- ── MESSAGES TAB ─────────────────────────────────────────────────────────── -->
+<div x-show="tab==='messages'" x-cloak>
+  <div class="flex gap-2 mb-2 flex-wrap">
+    <select x-model="feedSourceFilter" class="text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200">
+      <option value="">All sources</option>
+      <option>PLC</option><option>MES</option><option>ERP</option><option>AI</option><option>QMS</option><option>SCADA</option><option>DPP</option>
+    </select>
+    <span class="text-xs text-slate-500 self-center" x-text="recentMessages.length+' messages'"></span>
+  </div>
+  <div class="card p-2 max-h-[560px] overflow-y-auto">
+    <template x-for="(m,i) in filteredMessages.slice().reverse()" :key="i">
+      <div class="flex gap-2 items-start py-1 border-b border-slate-800 text-xs hover:bg-slate-800/20">
+        <span class="text-slate-600 w-16 shrink-0 font-mono" x-text="m.ts"></span>
+        <span :class="'badge-'+m.source" x-text="m.source" class="shrink-0 w-14"></span>
+        <span :class="'badge-'+(m.asset_type||'plant')" x-text="m.asset_type||'—'" class="shrink-0 w-20"></span>
+        <span class="text-slate-300 truncate flex-1" x-text="m.label"></span>
+        <span class="font-mono text-cyan-300 shrink-0 w-24 text-right" x-text="m.value"></span>
+      </div>
+    </template>
+    <div x-show="filteredMessages.length===0" class="text-slate-500 p-4 text-center">No messages — click Start</div>
+  </div>
+</div>
+
+<!-- ── FOOTER ──────────────────────────────────────────────────────────────── -->
+<div class="mt-4 text-xs text-slate-700 flex justify-between flex-wrap gap-2">
+  <span>Aurora Industries UNS Simulator v2 · <a href="/api/status" class="hover:text-slate-400">/api/status</a> · <a href="/docs" class="hover:text-slate-400">/docs</a></span>
+  <span x-text="'Uptime: '+fmtUptime(uptime)+'  ·  WS: '+wsClients+'  ·  Streams: '+streams.length"></span>
 </div>
 
 <script>
-function auroraApp() {
+function auroraApp(){
   return {
-    ws: null, running: false, mqttOk: false, rate: 0, uptime: 0, wsClients: 0,
-    totalPublished: 0, activeScenario: 'normal', scenarioLabel: 'Normal',
-    aiHint: '', oee: 79, plantKw: 0, shift: 'A',
-    currentProduct: 'BAT-CASE-AL-001', currentBatch: '', unitSeq: 0,
-    streams: [], scenarios: [], recentMessages: [],
-    dppHistory: [], dppTriggered: false,
-    tab: 'streams', streamFilter: '', areaFilter: '', typeFilter: '',
-    affectedAssets: [],
+    ws:null, running:false, mqttOk:false, rate:0, uptime:0, wsClients:0,
+    totalPublished:0, activeScenario:'normal', scenarioLabel:'Normal', aiHint:'',
+    oee:79, fpy:98, plantKw:0, plantKwh:0, co2Today:0, costToday:0,
+    scrapCount:0, reworkCount:0, qualityHolds:0, activeHolds:[],
+    shift:'A', currentProduct:'BAT-CASE-AL-001', currentBatch:'', unitSeq:0,
+    orderId:'', woId:'', woStatus:'IN_PROGRESS', batchStatus:'IN_PROGRESS',
+    customerId:'BMW-GROUP-DE', erpAlert:null, downtimeMin:0,
+    materials:[], dppHistory:[], dppTriggered:false,
+    streams:[], scenarios:[], scenarioDetail:null, recentMessages:[], inspectionHistory:[],
+    tab:'streams', streamFilter:'', areaFilter:'', typeFilter:'', sourceFilter:'', feedSourceFilter:'',
+    affectedAssets:[],
 
-    init() {
+    init(){
       fetch('/api/status').then(r=>r.json()).then(d=>this.applyStatus(d));
       this.connectWs();
-      setInterval(()=>this.dppTriggered=false, 4000);
+      setInterval(()=>{ this.dppTriggered=false; }, 4000);
     },
 
-    connectWs() {
-      const proto = location.protocol==='https:' ? 'wss' : 'ws';
-      this.ws = new WebSocket(`${proto}://${location.host}/ws`);
-      this.ws.onmessage = e => {
-        const d = JSON.parse(e.data);
-        if (d.type === 'init') this.applyStatus(d);
-        else if (d.type === 'stats') this.applyStats(d);
-        else if (d.type === 'message') this.applyMessage(d);
-        else if (d.type === 'control') this.running = d.running;
-        else if (d.type === 'mqtt_status') this.mqttOk = d.connected;
-        else if (d.type === 'scenario_change') { this.activeScenario=d.scenario; this.aiHint=d.ai_hint||''; this.affectedAssets=d.affected||[]; this.scenarioLabel=d.label; }
-        else if (d.type === 'dpp_triggered') { this.dppHistory.push(d); this.dppTriggered=true; }
-        else if (d.type === 'reset') { this.recentMessages=[]; this.totalPublished=0; }
+    connectWs(){
+      const proto=location.protocol==='https:'?'wss':'ws';
+      this.ws=new WebSocket(`${proto}://${location.host}/ws`);
+      this.ws.onmessage=e=>{
+        const d=JSON.parse(e.data);
+        if(d.type==='init')            this.applyStatus(d);
+        else if(d.type==='stats')      this.applyStats(d);
+        else if(d.type==='message')    this.applyMessage(d);
+        else if(d.type==='control')    this.running=d.running;
+        else if(d.type==='mqtt_status')this.mqttOk=d.connected;
+        else if(d.type==='scenario_change'){
+          this.activeScenario=d.scenario; this.aiHint=d.ai_hint||'';
+          this.affectedAssets=d.affected||[]; this.scenarioLabel=d.label;
+          const sc=this.scenarios.find(s=>s.id===d.scenario);
+          this.scenarioDetail=sc||null;
+        }
+        else if(d.type==='dpp_triggered'){this.dppHistory.push(d);this.dppTriggered=true;}
+        else if(d.type==='reset'){this.recentMessages=[];this.totalPublished=0;this.inspectionHistory=[];}
       };
-      this.ws.onclose = () => setTimeout(()=>this.connectWs(), 3000);
+      this.ws.onclose=()=>setTimeout(()=>this.connectWs(),3000);
     },
 
-    applyStatus(d) {
-      this.running = d.running; this.mqttOk = d.mqtt_connected;
-      this.rate = d.rate; this.uptime = d.uptime; this.wsClients = d.ws_clients;
-      this.totalPublished = d.total_published; this.activeScenario = d.scenario;
-      this.aiHint = d.ai_hint || ''; this.dppHistory = d.dpp_history || [];
-      this.currentProduct = d.current_product; this.currentBatch = d.current_batch;
-      this.unitSeq = d.unit_seq; this.shift = d.shift || 'A';
-      if (d.streams) this.streams = d.streams;
-      if (d.scenarios) this.scenarios = d.scenarios;
-      if (d.recent_messages) this.recentMessages = d.recent_messages;
-      const sc = this.scenarios.find(s=>s.id===this.activeScenario);
-      if (sc) { this.scenarioLabel=sc.label; this.affectedAssets=sc.affected||[]; }
+    applyStatus(d){
+      this.running=d.running; this.mqttOk=d.mqtt_connected; this.rate=d.rate;
+      this.uptime=d.uptime; this.wsClients=d.ws_clients; this.totalPublished=d.total_published;
+      this.activeScenario=d.scenario; this.aiHint=d.ai_hint||''; this.dppHistory=d.dpp_history||[];
+      this.currentProduct=d.current_product; this.currentBatch=d.current_batch;
+      this.unitSeq=d.unit_seq; this.shift=d.shift||'A';
+      if(d.streams)   this.streams=d.streams;
+      if(d.scenarios) this.scenarios=d.scenarios;
+      if(d.recent_messages) this.recentMessages=d.recent_messages;
+      const sc=this.scenarios.find(s=>s.id===this.activeScenario);
+      if(sc){this.scenarioLabel=sc.label;this.affectedAssets=sc.affected||[];this.scenarioDetail=sc;}
     },
 
-    applyStats(d) {
+    applyStats(d){
       this.running=d.running; this.mqttOk=d.mqtt_connected; this.rate=d.rate;
       this.uptime=d.uptime; this.wsClients=d.ws_clients; this.totalPublished=d.total_published;
     },
 
-    applyMessage(d) {
-      const s = this.streams.find(st=>st.id===d.stream_id);
-      if (s) { s.value=d.value; s.pub_count=(s.pub_count||0)+1; }
+    applyMessage(d){
+      const s=this.streams.find(st=>st.id===d.stream_id);
+      if(s){ s.value=d.value; s.pub_count=(s.pub_count||0)+1; }
       this.recentMessages.push({ts:d.ts,label:d.label,source:d.source,
         asset_id:d.asset_id,asset_type:d.asset_type,value:d.value,topic:d.topic});
-      if (this.recentMessages.length > 300) this.recentMessages.shift();
+      if(this.recentMessages.length>400)this.recentMessages.shift();
       this.totalPublished++;
-      // Update KPIs from specific streams
-      if (d.stream_id === 'plant_oee') this.oee = parseFloat(d.value)||79;
-      if (d.stream_id === 'plant_energy') this.plantKw = d.value;
+      // KPI updates
+      if(d.stream_id==='plant_oee'){ try{const p=JSON.parse(d.payload||'{}');this.oee=p.oee_pct||this.oee;this.fpy=p.quality_pct||this.fpy;this.scrapCount=p.scrap_count??this.scrapCount;this.reworkCount=p.rework_count??this.reworkCount;}catch(e){} }
+      if(d.stream_id==='plant_energy'){ try{const p=JSON.parse(d.payload||'{}');this.plantKw=p.current_kw||this.plantKw;this.plantKwh=p.total_kwh||this.plantKwh;this.co2Today=p.co2_kg_today||this.co2Today;this.costToday=p.cost_eur_today||this.costToday;}catch(e){} }
+      if(d.stream_id==='erp_order'){ try{const p=JSON.parse(d.payload||'{}');this.orderId=p.order_id||this.orderId;this.unitSeq=p.quantity_produced||this.unitSeq;this.scrapCount=p.quantity_scrap??this.scrapCount;this.erpAlert=p.alert||null;this.customerId=p.customer_id||this.customerId;}catch(e){} }
+      if(d.stream_id==='erp_materials'){ try{const p=JSON.parse(d.payload||'{}');if(p.materials)this.materials=(p.materials||[]).map(m=>({id:m.material_id,value:m.consumed_kg,warning:m.stock_warning}));}catch(e){} }
+      if(d.stream_id==='erp_holds'){ try{const p=JSON.parse(d.payload||'{}');this.activeHolds=p.active_holds||[];this.qualityHolds=p.hold_count||0;}catch(e){} }
+      if(d.stream_id==='mes_batch'){ try{const p=JSON.parse(d.payload||'{}');this.batchStatus=p.batch_status||this.batchStatus;this.fpy=p.first_pass_yield_pct||this.fpy;this.woId=p.work_order_id||this.woId;}catch(e){} }
+      if(d.stream_id==='mes_wo'){ try{const p=JSON.parse(d.payload||'{}');this.woId=p.work_order_id||this.woId;this.woStatus=p.status||this.woStatus;this.downtimeMin=p.downtime_min||this.downtimeMin;}catch(e){} }
+      // inspection history
+      if(d.asset_type==='inspection'){ try{const p=JSON.parse(d.payload||'{}');if(p.result)this.inspectionHistory.push({ts:d.ts,unit_id:p.unit_id,method:p.method,result:p.result,disposition:p.disposition});if(this.inspectionHistory.length>100)this.inspectionHistory.shift();}catch(e){} }
+      // power stream extras
+      const ps=this.streams.find(st=>st.id===d.stream_id);
+      if(ps&&d.stream_id.endsWith('_power')){ try{const p=JSON.parse(d.payload||'{}');ps.pf=p.power_factor;ps.thd=p.thd_pct;}catch(e){} }
+      // SPC
+      const sp=this.streams.find(st=>st.id===d.stream_id);
+      if(sp&&d.stream_id.startsWith('spc_')){ try{const p=JSON.parse(d.payload||'{}');sp.ucl=p.ucl;sp.lcl=p.lcl;sp.cpk=p.cpk;sp.trend=p.trend;sp.in_control=p.in_control;}catch(e){} }
     },
 
-    get filteredStreams() {
-      return this.streams.filter(s =>
-        (!this.streamFilter || s.label.toLowerCase().includes(this.streamFilter.toLowerCase()) || s.topic.includes(this.streamFilter) || s.asset_id.includes(this.streamFilter)) &&
-        (!this.areaFilter || s.area === this.areaFilter) &&
-        (!this.typeFilter || s.asset_type === this.typeFilter)
+    get filteredStreams(){
+      return this.streams.filter(s=>
+        (!this.streamFilter||s.label.toLowerCase().includes(this.streamFilter.toLowerCase())||s.topic.includes(this.streamFilter)||s.asset_id.includes(this.streamFilter))&&
+        (!this.areaFilter||s.area===this.areaFilter)&&
+        (!this.typeFilter||s.asset_type===this.typeFilter)&&
+        (!this.sourceFilter||s.source===this.sourceFilter)
       );
     },
-    get uniqueAreas() { return [...new Set(this.streams.map(s=>s.area).filter(Boolean))].sort(); },
-    get uniqueTypes() { return [...new Set(this.streams.map(s=>s.asset_type).filter(Boolean))].sort(); },
-    get energyStreams() { return this.streams.filter(s=>s.id.endsWith('_energy') || s.id==='plant_energy' || s.id.endsWith('_energy')); },
-    get powerStreams() { return this.streams.filter(s=>s.id.endsWith('_power')); },
-    get healthStreams() { return this.streams.filter(s=>s.id.endsWith('_health')); },
-    get pdmStreams() { return this.streams.filter(s=>s.id.endsWith('_pdm')); },
-
-    isAffected(assetId) { return this.affectedAssets.includes(assetId); },
-
-    parseHealthScore(val) {
-      if (!val || val==='—') return 80;
-      const n = parseFloat(val);
-      return isNaN(n) ? 80 : Math.min(100, Math.max(0, n));
-    },
-    healthColor(v) {
-      if (v > 80) return '#10b981';
-      if (v > 60) return '#f59e0b';
-      return '#ef4444';
+    get uniqueAreas(){return[...new Set(this.streams.map(s=>s.area).filter(Boolean))].sort();},
+    get uniqueTypes(){return[...new Set(this.streams.map(s=>s.asset_type).filter(Boolean))].sort();},
+    get uniqueSources(){return[...new Set(this.streams.map(s=>s.source).filter(Boolean))].sort();},
+    get powerStreams(){return this.streams.filter(s=>s.id.endsWith('_power'));},
+    get energyStreams(){return this.streams.filter(s=>s.id.endsWith('_energy'));},
+    get healthStreams(){return this.streams.filter(s=>s.id.endsWith('_health'));},
+    get pdmStreams(){return this.streams.filter(s=>s.id.endsWith('_pdm'));},
+    get spcStreams(){return this.streams.filter(s=>s.id.startsWith('spc_'));},
+    get filteredMessages(){
+      if(!this.feedSourceFilter)return this.recentMessages;
+      return this.recentMessages.filter(m=>m.source===this.feedSourceFilter);
     },
 
-    setScenario(id) {
-      fetch('/api/scenario/'+id, {method:'POST'}).then(r=>r.json()).then(d=>{
-        if (d.ok) { this.activeScenario=id; this.aiHint=d.ai_hint||'';
+    get productFlow(){
+      const fault=this.activeScenario;
+      const node=(id,label,sub,forceStatus)=>{
+        let status='ok';
+        if(forceStatus)status=forceStatus;
+        else if(this.affectedAssets.some(a=>a.includes(id)))status='fault';
+        else if(fault==='batch_quality_hold'&&id==='curing')status='hold';
+        return{id,label,sub,status,last:false};
+      };
+      const nodes=[
+        node('press','Pressing','L01',this.activeScenario==='conveyor_cv01_jam'?'warn':undefined),
+        node('painting','Painting','L02'),
+        node('curing','Curing','L03',this.activeScenario==='oven_zone2_heater_failure'||this.activeScenario==='oven_thermal_runaway'||this.activeScenario==='batch_quality_hold'?'fault':undefined),
+        node('inspection','Inspection','L04',this.activeScenario==='multi_asset_cascade'||this.activeScenario==='quality_escape'?'warn':undefined),
+        node('dpp','DPP','Digital',this.dppHistory.length>0?'ok':'warn'),
+        node('erp','ERP','SAP',this.activeScenario==='erp_material_shortage'?'fault':undefined),
+      ];
+      nodes[nodes.length-1].last=true;
+      return nodes;
+    },
+
+    isAffected(id){return this.affectedAssets.includes(id);},
+    parseH(v){if(!v||v==='—')return 80;const n=parseFloat(v);return isNaN(n)?80:Math.min(100,Math.max(0,n));},
+    hcolor(v){return v>80?'#10b981':v>60?'#f59e0b':'#ef4444';},
+
+    setScenario(id){
+      fetch('/api/scenario/'+id,{method:'POST'}).then(r=>r.json()).then(d=>{
+        if(d.ok){
+          this.activeScenario=id;this.aiHint=d.ai_hint||'';
           const sc=this.scenarios.find(s=>s.id===id);
-          if (sc) { this.scenarioLabel=sc.label; this.affectedAssets=sc.affected||[]; }
+          if(sc){this.scenarioLabel=sc.label;this.affectedAssets=sc.affected||[];this.scenarioDetail=sc;}
         }
       });
     },
 
-    triggerDpp() {
+    triggerDpp(){
       fetch('/api/trigger_dpp',{method:'POST'}).then(r=>r.json()).then(d=>{
-        if (d.ok) { this.dppTriggered=true; this.dppHistory.push({batch_id:d.batch_id,unit_count:this.unitSeq,timestamp:new Date().toISOString()}); }
+        if(d.ok){this.dppTriggered=true;this.dppHistory.push({batch_id:d.batch_id,unit_count:this.unitSeq,timestamp:new Date().toISOString()});}
       });
     },
 
-    apiPost(path) { fetch(path,{method:'POST'}).then(r=>r.json()).then(d=>d.running!==undefined&&(this.running=d.running)); },
-
-    formatUptime(s) {
-      if (!s) return '0s';
-      const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
-      return h>0 ? `${h}h ${m}m` : m>0 ? `${m}m ${sec}s` : `${sec}s`;
-    },
+    apiPost(path){fetch(path,{method:'POST'}).then(r=>r.json()).then(d=>d.running!==undefined&&(this.running=d.running));},
+    fmtUptime(s){if(!s)return'0s';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return h>0?`${h}h ${m}m`:m>0?`${m}m ${sc}s`:`${sc}s`;},
   }
 }
 </script>

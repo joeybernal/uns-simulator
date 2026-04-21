@@ -1,0 +1,32 @@
+# ── Build stage ───────────────────────────────────────────────────────────────
+FROM public.ecr.aws/docker/library/python:3.12-slim AS builder
+
+WORKDIR /app
+COPY requirements-aurora.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements-aurora.txt
+
+# ── Runtime stage ─────────────────────────────────────────────────────────────
+FROM public.ecr.aws/docker/library/python:3.12-slim
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+
+# Application files
+COPY aurora_simulator.py  .
+COPY aurora_model.py      .
+COPY static/              static/
+
+# Non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8081
+
+ENV PYTHONUNBUFFERED=1 \
+    AURORA_PORT=8081
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=5 \
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')" || exit 1
+
+CMD ["python3", "-m", "uvicorn", "aurora_simulator:app", "--host", "0.0.0.0", "--port", "8081", "--log-level", "warning"]

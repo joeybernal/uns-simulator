@@ -1,0 +1,69 @@
+{
+  "family": "aurora-simulator",
+  "taskRoleArn": "arn:aws:iam::881490131520:role/pipeline-monitor-ecs-task-role",
+  "executionRoleArn": "arn:aws:iam::881490131520:role/pipeline-monitor-ecs-execution-role",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "containerDefinitions": [
+    {
+      "name": "aurora-simulator",
+      "image": "881490131520.dkr.ecr.eu-central-1.amazonaws.com/aurora-simulator:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8081,
+          "hostPort": 8081,
+          "protocol": "tcp",
+          "name": "http"
+        }
+      ],
+      "environment": [
+        { "name": "MQTT_HOST",    "value": "mqtt.iotdemozone.com" },
+        { "name": "MQTT_PORT",    "value": "1883" },
+        { "name": "MQTT_USER",    "value": "admin" },
+        { "name": "AURORA_PORT",  "value": "8081" },
+        { "name": "INFLUX_ORG",   "value": "iotauto" },
+        { "name": "INFLUX_BUCKET","value": "aurora" }
+      ],
+      "secrets": [
+        {
+          "name": "MQTT_PASS",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:881490131520:secret:pipeline-monitor/mqtt-password-Vt925U"
+        },
+        {
+          "name": "AURORA_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:881490131520:secret:aurora-simulator/api-key-XXXXXX:api_key::"
+        },
+        {
+          "name": "INFLUX_URL",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:881490131520:secret:aurora-simulator/influx-url-XXXXXX:url::"
+        },
+        {
+          "name": "INFLUX_TOKEN",
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:881490131520:secret:aurora-simulator/influx-token-XXXXXX:token::"
+        }
+      ],
+      "stopTimeout": 30,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/aurora-simulator",
+          "awslogs-region": "eu-central-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8081/health')\" || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 45
+      }
+    }
+  ]
+}
