@@ -528,92 +528,99 @@ async def stop_stream(stream_id: str):
     return {"ok": True}
 
 
+def _terminus_sync_blocking(old_id: str, new_id: str) -> None:
+    """Blocking HTTP calls to TerminusDB — run in executor thread."""
+    import base64, datetime as _dt, urllib.request as _ur, urllib.error as _ue
+    auth = "Basic " + base64.b64encode(f"{TERMINUS_USER}:{TERMINUS_PASS}".encode()).decode()
+    base_url = f"{TERMINUS_URL}/api/document/{TERMINUS_TEAM}/{TERMINUS_DB}"
+    hdrs = {"Content-Type": "application/json", "Authorization": auth}
+    now_iso = _dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    def _post(url, body):
+        data = json.dumps(body).encode()
+        req = _ur.Request(url, data=data, method="POST", headers=hdrs)
+        with _ur.urlopen(req, timeout=8) as r:
+            return r.status, r.read().decode()
+
+    def _put(url, body):
+        data = json.dumps(body).encode()
+        req = _ur.Request(url, data=data, method="PUT", headers=hdrs)
+        with _ur.urlopen(req, timeout=8) as r:
+            return r.status, r.read().decode()
+
+    def _get(url):
+        req = _ur.Request(url, headers={"Authorization": auth})
+        with _ur.urlopen(req, timeout=8) as r:
+            raw = r.read().decode()
+        result = []
+        for line in raw.strip().split("\n"):
+            if line.strip():
+                try: result.append(json.loads(line))
+                except Exception: pass
+        return result
+
+    # 1. Close previous open ScenarioEvent
+    try:
+        events_raw = _get(f"{base_url}?type=ScenarioEvent&count=50")
+        open_events = [
+            e for e in events_raw
+            if e.get("scenario", "").endswith(f"/{old_id}")
+            and "deactivated_at" not in e
+        ]
+        for ev in open_events:
+            activated = ev.get("activated_at", now_iso)
+            try:
+                t0 = _dt.datetime.fromisoformat(activated.replace("Z", "+00:00"))
+                t1 = _dt.datetime.now(_dt.timezone.utc)
+                dur = int((t1 - t0).total_seconds())
+            except Exception:
+                dur = None
+            closed = dict(ev)
+            closed["deactivated_at"] = now_iso
+            if dur is not None:
+                closed["duration_s"] = dur
+            _put(f"{base_url}?author=uns-sim&message=scenario+deactivated+{old_id}", closed)
+    except Exception as ce:
+        print(f"[terminus] could not close old events: {ce}")
+
+    # 2. Create new ScenarioEvent
+    event_doc = {
+        "@type": "ScenarioEvent",
+        "scenario": {"@type": "@id", "@id": f"FaultScenario/{new_id}"},
+        "activated_at": now_iso,
+        "triggered_by": "api",
+        "influx_query_hint": (
+            f'from(bucket:"Aurora") |> range(start: -1h) '
+            f'|> filter(fn:(r) => r.scenario == "{new_id}")'
+        ),
+    }
+    status, body = _post(f"{base_url}?author=uns-sim&message=scenario+activated+{new_id}", event_doc)
+    print(f"[terminus] ScenarioEvent POST status={status}")
+
+    # 3. Update PlantState singleton
+    plant_state = {
+        "@type": "PlantState",
+        "@id": "PlantState/aurora",
+        "plant_id": "aurora",
+        "active_scenario": {"@type": "@id", "@id": f"FaultScenario/{new_id}"},
+        "last_updated": now_iso,
+        "mqtt_connected": STATE.mqtt_connected,
+    }
+    _put(f"{base_url}?author=uns-sim&message=plantstate+update", plant_state)
+    print(f"[terminus] PlantState updated → {new_id}")
+
+
 async def _update_terminus_scenario(old_id: str, new_id: str) -> None:
     """Fire-and-forget: record ScenarioEvent + update PlantState in TerminusDB."""
     if not TERMINUS_URL or not TERMINUS_PASS:
+        print(f"[terminus] skipped — TERMINUS_URL={repr(TERMINUS_URL)} TERMINUS_PASS={'set' if TERMINUS_PASS else 'EMPTY'}")
         return
+    print(f"[terminus] syncing scenario {old_id} → {new_id}")
     try:
-        import base64, datetime as _dt, urllib.request as _ur
-        auth = "Basic " + base64.b64encode(f"{TERMINUS_USER}:{TERMINUS_PASS}".encode()).decode()
-        base = f"{TERMINUS_URL}/api/document/{TERMINUS_TEAM}/{TERMINUS_DB}"
-        hdrs = {"Content-Type": "application/json", "Authorization": auth}
-        now_iso = _dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-
-        def _post(url, body):
-            data = json.dumps(body).encode()
-            req = _ur.Request(url, data=data, method="POST", headers=hdrs)
-            with _ur.urlopen(req, timeout=5) as r:
-                return r.status
-
-        def _put(url, body):
-            data = json.dumps(body).encode()
-            req = _ur.Request(url, data=data, method="PUT", headers=hdrs)
-            with _ur.urlopen(req, timeout=5) as r:
-                return r.status
-
-        def _get(url):
-            req = _ur.Request(url, headers={"Authorization": auth})
-            with _ur.urlopen(req, timeout=5) as r:
-                raw = r.read().decode()
-            result = []
-            for line in raw.strip().split("\n"):
-                if line.strip():
-                    try: result.append(json.loads(line))
-                    except Exception: pass
-            return result
-
-        # 1. Close previous open ScenarioEvent
-        try:
-            events_raw = _get(f"{base}?type=ScenarioEvent&count=50")
-            open_events = [
-                e for e in events_raw
-                if e.get("scenario", "").endswith(f"/{old_id}")
-                and "deactivated_at" not in e
-            ]
-            for ev in open_events:
-                activated = ev.get("activated_at", now_iso)
-                try:
-                    import datetime as _dt2
-                    t0 = _dt2.datetime.fromisoformat(activated.replace("Z", "+00:00"))
-                    t1 = _dt2.datetime.now(_dt2.timezone.utc)
-                    dur = int((t1 - t0).total_seconds())
-                except Exception:
-                    dur = None
-                closed = dict(ev)
-                closed["deactivated_at"] = now_iso
-                if dur is not None:
-                    closed["duration_s"] = dur
-                _put(f"{base}?author=uns-sim&message=scenario+deactivated+{old_id}", closed)
-        except Exception as ce:
-            print(f"[terminus] could not close old events: {ce}")
-
-        # 2. Create new ScenarioEvent
-        event_doc = {
-            "@type": "ScenarioEvent",
-            "scenario": {"@type": "@id", "@id": f"FaultScenario/{new_id}"},
-            "activated_at": now_iso,
-            "triggered_by": "api",
-            "influx_query_hint": (
-                f'from(bucket:"Aurora") |> range(start: -1h) '
-                f'|> filter(fn:(r) => r.scenario == "{new_id}")'
-            ),
-        }
-        _post(f"{base}?author=uns-sim&message=scenario+activated+{new_id}", event_doc)
-
-        # 3. Update PlantState singleton
-        plant_state = {
-            "@type": "PlantState",
-            "@id": "PlantState/aurora",
-            "plant_id": "aurora",
-            "active_scenario": {"@type": "@id", "@id": f"FaultScenario/{new_id}"},
-            "last_updated": now_iso,
-            "mqtt_connected": STATE.mqtt_connected,
-        }
-        _put(f"{base}?author=uns-sim&message=plantstate+update", plant_state)
-
-        print(f"[terminus] scenario event + PlantState updated → {new_id}")
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _terminus_sync_blocking, old_id, new_id)
     except Exception as e:
-        print(f"[terminus] sync failed (non-critical): {e}")
+        print(f"[terminus] sync failed (non-critical): {type(e).__name__}: {e}")
 
 
 @app.post("/api/scenario/{scenario_id}")
