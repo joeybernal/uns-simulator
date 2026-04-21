@@ -1,119 +1,1349 @@
 {
   "dashboard": {
     "uid": "aurora-faults-alarms",
-    "title": "7. Aurora — Faults, Alarms & Scenario History",
-    "tags": ["aurora", "faults", "alarms", "scenarios"],
+    "title": "7. Aurora \u2014 Faults, Alarms & Scenario History",
+    "tags": [
+      "aurora",
+      "faults",
+      "alarms",
+      "scenarios"
+    ],
     "timezone": "browser",
     "refresh": "10s",
-    "time": {"from": "now-6h", "to": "now"},
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
     "panels": [
       {
-        "id": 1, "type": "stat", "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "id": 1,
+        "type": "stat",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        },
         "title": "Current Scenario",
-        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "value", "text": {"valueSize": 24}},
-        "fieldConfig": {"defaults": {"mappings": [
-          {"type": "value", "options": {"normal": {"text": "✅ NORMAL", "color": "green"}, "fault": {"text": "🔴 FAULT", "color": "red"}, "degraded": {"text": "⚠ DEGRADED", "color": "yellow"}}}
-        ], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"scenario\")\n  |> last()", "refId": "A"}]
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          },
+          "colorMode": "background",
+          "textMode": "value",
+          "text": {
+            "valueSize": 24
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "normal": {
+                    "text": "\u2705 NORMAL",
+                    "color": "green"
+                  },
+                  "fault": {
+                    "text": "\ud83d\udd34 FAULT",
+                    "color": "red"
+                  },
+                  "degraded": {
+                    "text": "\u26a0 DEGRADED",
+                    "color": "yellow"
+                  }
+                }
+              }
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"scenario\")\n  |> last()",
+            "refId": "A"
+          }
+        ]
       },
       {
-        "id": 2, "type": "stat", "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "id": 2,
+        "type": "stat",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 0
+        },
         "title": "Active Fault Code",
-        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "value"},
-        "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"fault_code\")\n  |> last()", "refId": "A"}]
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          },
+          "colorMode": "background",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"fault_code\")\n  |> last()",
+            "refId": "A"
+          }
+        ]
       },
       {
-        "id": 3, "type": "stat", "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "id": 3,
+        "type": "stat",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 12,
+          "y": 0
+        },
         "title": "Alarm Count (last 1h)",
-        "options": {"reduceOptions": {"calcs": ["sum"]}, "colorMode": "background"},
-        "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 3}, {"color": "red", "value": 8}]}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"alarm_count\")\n  |> sum()", "refId": "A"}]
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "sum"
+            ]
+          },
+          "colorMode": "background"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 3
+                },
+                {
+                  "color": "red",
+                  "value": 8
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"alarm_count\")\n  |> sum()",
+            "refId": "A"
+          }
+        ]
       },
       {
-        "id": 4, "type": "stat", "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "id": 4,
+        "type": "stat",
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        },
         "title": "Critical Alarms (last 6h)",
-        "options": {"reduceOptions": {"calcs": ["sum"]}, "colorMode": "background"},
-        "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}, {"color": "red", "value": 3}]}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"critical_count\")\n  |> sum()", "refId": "A"}]
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "sum"
+            ]
+          },
+          "colorMode": "background"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 1
+                },
+                {
+                  "color": "red",
+                  "value": 3
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"critical_count\")\n  |> sum()",
+            "refId": "A"
+          }
+        ]
       },
       {
-        "id": 10, "type": "timeseries", "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
-        "title": "Scenario Timeline — All Assets (normal=1, degraded=0.5, fault=0)",
-        "description": "Maps scenario string to numeric value. Drops to 0 on fault, 0.5 on degraded — easy visual of fault events over time.",
-        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
-        "fieldConfig": {"defaults": {"min": 0, "max": 1.2, "custom": {"lineWidth": 2, "fillOpacity": 20}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 0.4}, {"color": "green", "value": 0.9}]}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"scenario_numeric\")\n  |> aggregateWindow(every: 30s, fn: last, createEmpty: false)", "refId": "A"}]
+        "id": 10,
+        "type": "timeseries",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 4
+        },
+        "title": "Scenario Timeline \u2014 All Assets (normal=1, degraded=0.5, fault=0)",
+        "description": "Maps scenario string to numeric value. Drops to 0 on fault, 0.5 on degraded \u2014 easy visual of fault events over time.",
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1.2,
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 20
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.4
+                },
+                {
+                  "color": "green",
+                  "value": 0.9
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"scenario_numeric\")\n  |> aggregateWindow(every: 30s, fn: last, createEmpty: false)",
+            "refId": "A"
+          }
+        ]
       },
       {
-        "id": 11, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
-        "title": "Alarm Events Over Time — By Asset",
-        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
-        "fieldConfig": {"defaults": {"min": 0, "custom": {"lineWidth": 1, "fillOpacity": 30, "drawStyle": "bars", "barAlignment": 0}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"alarm_count\")\n  |> aggregateWindow(every: 5m, fn: sum, createEmpty: false)", "refId": "A"}]
+        "id": 11,
+        "type": "timeseries",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 12
+        },
+        "title": "Alarm Events Over Time \u2014 By Asset",
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "custom": {
+              "lineWidth": 1,
+              "fillOpacity": 30,
+              "drawStyle": "bars",
+              "barAlignment": 0
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_alarms\" and r._field == \"alarm_count\")\n  |> aggregateWindow(every: 5m, fn: sum, createEmpty: false)",
+            "refId": "A"
+          }
+        ]
       },
       {
-        "id": 12, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
-        "title": "Press Fault Indicators — PR01 Hydraulic Pressure vs Threshold",
+        "id": 12,
+        "type": "timeseries",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 12
+        },
+        "title": "Press Fault Indicators \u2014 PR01 Hydraulic Pressure vs Threshold",
         "description": "Hydraulic pressure dropping below ~170 bar indicates fault condition",
-        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
-        "fieldConfig": {"defaults": {"unit": "bar", "custom": {"lineWidth": 2}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 170}, {"color": "green", "value": 200}]}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"hydraulic_pressure_bar\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bar",
+            "custom": {
+              "lineWidth": 2
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 170
+                },
+                {
+                  "color": "green",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"hydraulic_pressure_bar\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)",
+            "refId": "A"
+          }
+        ]
       },
       {
-        "id": 20, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
-        "title": "Conveyor Jam Events — Speed Drop to Zero",
+        "id": 20,
+        "type": "timeseries",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 20
+        },
+        "title": "Conveyor Jam Events \u2014 Speed Drop to Zero",
         "description": "Speed dropping to 0 or near-0 indicates jam fault. Red threshold at 0.1 m/s.",
-        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
-        "fieldConfig": {"defaults": {"unit": "velocityms", "min": 0, "custom": {"lineWidth": 2, "fillOpacity": 15}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 0.2}, {"color": "green", "value": 0.8}]}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"conveyor\" and r._field == \"speed_ms\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)", "refId": "A"}]
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "velocityms",
+            "min": 0,
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 15
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.2
+                },
+                {
+                  "color": "green",
+                  "value": 0.8
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"conveyor\" and r._field == \"speed_ms\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)",
+            "refId": "A"
+          }
+        ]
       },
       {
-        "id": 21, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
-        "title": "Robot R3 Spray Drift — Path Accuracy (mm)",
+        "id": 21,
+        "type": "timeseries",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        },
+        "title": "Robot R3 Spray Drift \u2014 Path Accuracy (mm)",
         "description": "Path accuracy >0.5mm indicates spray drift fault. Robot R3 spray_drift scenario.",
-        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
-        "fieldConfig": {"defaults": {"unit": "lengthmm", "min": 0, "custom": {"lineWidth": 2, "fillOpacity": 10}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.3}, {"color": "red", "value": 0.5}]}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"robot\" and r._field == \"path_accuracy_mm\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)", "refId": "A"}]
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "lengthmm",
+            "min": 0,
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 10
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.3
+                },
+                {
+                  "color": "red",
+                  "value": 0.5
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"robot\" and r._field == \"path_accuracy_mm\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)",
+            "refId": "A"
+          }
+        ]
       },
       {
-        "id": 30, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
-        "title": "Oven Sync Loss — CV04 vs OV01 Temperature",
+        "id": 30,
+        "type": "timeseries",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 28
+        },
+        "title": "Oven Sync Loss \u2014 CV04 vs OV01 Temperature",
         "description": "oven_cv04_sync_loss fault: CV04 speed becomes erratic while OV01 zone temps spike",
-        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
-        "fieldConfig": {"defaults": {"custom": {"lineWidth": 2}}},
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "lineWidth": 2
+            }
+          }
+        },
         "targets": [
-          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"conveyor_CV04\" and r._field == \"speed_ms\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({r with _field: \"CV04 speed_ms\"}))", "refId": "A"},
-          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"oven_OV01\" and r._field == \"zone3_temp_c\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({r with _field: \"OV01 zone3_temp_c\"}))", "refId": "B"}]
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"conveyor_CV04\" and r._field == \"speed_ms\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({r with _field: \"CV04 speed_ms\"}))",
+            "refId": "A"
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"oven_OV01\" and r._field == \"zone3_temp_c\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({r with _field: \"OV01 zone3_temp_c\"}))",
+            "refId": "B"
+          }
+        ]
       },
       {
-        "id": 31, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
-        "title": "Sprayer Filter Blockage — Filter ΔP (bar)",
+        "id": 31,
+        "type": "timeseries",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 28
+        },
+        "title": "Sprayer Filter Blockage \u2014 Filter \u0394P (bar)",
         "description": "SP02 filter_dp_bar rising above 0.5 bar indicates filter_blocked fault",
-        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
-        "fieldConfig": {"defaults": {"unit": "pressurebar", "min": 0, "custom": {"lineWidth": 2, "fillOpacity": 15}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.3}, {"color": "red", "value": 0.5}]}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"sprayer\" and r._field == \"filter_dp_bar\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)", "refId": "A"}]
-      },
-      {
-        "id": 40, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 36},
-        "title": "Press Die Wear (%) — Fault at >90%",
-        "description": "Die wear progresses over time; fault triggers at >90% wear",
-        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
-        "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "custom": {"lineWidth": 2}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 70}, {"color": "red", "value": 90}]}}},
-        "targets": [{"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"die_wear_pct\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)", "refId": "A"}]
-      },
-      {
-        "id": 41, "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 36},
-        "title": "Compressor — Outlet Temp & Air Pressure",
-        "description": "CP01_overload: outlet_temp_c rises to ~105°C. compressed_air_leak: outlet_pressure_bar drops.",
-        "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
-        "fieldConfig": {"defaults": {"custom": {"lineWidth": 2}}},
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "pressurebar",
+            "min": 0,
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 15
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.3
+                },
+                {
+                  "color": "red",
+                  "value": 0.5
+                }
+              ]
+            }
+          }
+        },
         "targets": [
-          {"datasource": {"type": "influxdb", "uid": "cfgvijnkiwk5ca"}, "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"compressor_CP01\" and (r._field == \"outlet_temp_c\" or r._field == \"outlet_pressure_bar\"))\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)", "refId": "A"}]
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_type == \"sprayer\" and r._field == \"filter_dp_bar\")\n  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 40,
+        "type": "timeseries",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 36
+        },
+        "title": "Press Die Wear (%) \u2014 Fault at >90%",
+        "description": "Die wear progresses over time; fault triggers at >90% wear",
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "custom": {
+              "lineWidth": 2
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 70
+                },
+                {
+                  "color": "red",
+                  "value": 90
+                }
+              ]
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r._field == \"die_wear_pct\")\n  |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 41,
+        "type": "timeseries",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 36
+        },
+        "title": "Compressor \u2014 Outlet Temp & Air Pressure",
+        "description": "CP01_overload: outlet_temp_c rises to ~105\u00b0C. compressed_air_leak: outlet_pressure_bar drops.",
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "lineWidth": 2
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "cfgvijnkiwk5ca"
+            },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_data\" and r.asset_id == \"compressor_CP01\" and (r._field == \"outlet_temp_c\" or r._field == \"outlet_pressure_bar\"))\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 49,
+        "type": "text",
+        "title": "TerminusDB \u2014 Digital Twin Context Layer",
+        "description": "The graph layer: scenario history, asset relationships, root cause context. Data from TerminusDB admin/aurora.",
+        "gridPos": {
+          "h": 2,
+          "w": 24,
+          "x": 0,
+          "y": 44
+        },
+        "options": {
+          "content": "## \ud83d\uddc3\ufe0f TerminusDB \u2014 Digital Twin Context Layer\nScenario event history and asset operational status from the graph layer. Updated on every scenario change.",
+          "mode": "markdown"
+        },
+        "transparent": true
+      },
+      {
+        "id": 50,
+        "type": "table",
+        "title": "\ud83d\udccb Scenario Event History (TerminusDB)",
+        "description": "All scenario activations/deactivations from TerminusDB ScenarioEvent documents. Shows who triggered each scenario, when, and how long it ran.",
+        "gridPos": {
+          "h": 10,
+          "w": 14,
+          "x": 0,
+          "y": 46
+        },
+        "datasource": {
+          "type": "yesoreyeram-infinity-datasource",
+          "uid": "terminus-infinity"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {
+              "align": "left",
+              "displayMode": "auto",
+              "inspect": false
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "scenario"
+              },
+              "properties": [
+                {
+                  "id": "custom.width",
+                  "value": 160
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "activated_at"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Activated"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 170
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "deactivated_at"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Deactivated"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 170
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "duration_s"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Duration (s)"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 100
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "triggered_by"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Triggered By"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 100
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "footer": {
+            "show": false
+          },
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "Activated"
+            }
+          ]
+        },
+        "targets": [
+          {
+            "columns": [
+              {
+                "selector": "scenario",
+                "text": "Scenario",
+                "type": "string"
+              },
+              {
+                "selector": "activated_at",
+                "text": "activated_at",
+                "type": "string"
+              },
+              {
+                "selector": "deactivated_at",
+                "text": "deactivated_at",
+                "type": "string"
+              },
+              {
+                "selector": "duration_s",
+                "text": "duration_s",
+                "type": "number"
+              },
+              {
+                "selector": "triggered_by",
+                "text": "triggered_by",
+                "type": "string"
+              },
+              {
+                "selector": "influx_query_hint",
+                "text": "influx_query_hint",
+                "type": "string"
+              }
+            ],
+            "data": "",
+            "filters": [],
+            "format": "table",
+            "global_query_id": "",
+            "json_options": {
+              "root_is_not_array": false,
+              "columnar": false
+            },
+            "parser": "backend",
+            "refId": "A",
+            "root_selector": "",
+            "source": "url",
+            "type": "json",
+            "url": "https://terminusdb.iotdemozone.com/api/document/admin/aurora?type=ScenarioEvent&unfold=true&count=50",
+            "url_options": {
+              "method": "GET",
+              "headers": [
+                {
+                  "key": "Authorization",
+                  "value": "Basic YWRtaW46OEN2N1IjTUU="
+                }
+              ]
+            }
+          }
+        ],
+        "transformations": [
+          {
+            "id": "sortBy",
+            "options": {
+              "fields": [
+                {
+                  "desc": true,
+                  "displayName": "activated_at"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": 51,
+        "type": "table",
+        "title": "\ud83c\udfed Asset Operational Status (TerminusDB)",
+        "description": "Current operational status and health scores for all assets from TerminusDB. Updated on scenario changes.",
+        "gridPos": {
+          "h": 10,
+          "w": 10,
+          "x": 14,
+          "y": 46
+        },
+        "datasource": {
+          "type": "yesoreyeram-infinity-datasource",
+          "uid": "terminus-infinity"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {
+              "align": "left",
+              "displayMode": "color-background-solid",
+              "inspect": false
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "label"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Asset"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 160
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "asset_type"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Type"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 90
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "area"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Area"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 90
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "operational_status"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Status"
+                },
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background-solid"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 90
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      },
+                      {
+                        "color": "yellow",
+                        "value": "degraded"
+                      },
+                      {
+                        "color": "red",
+                        "value": "fault"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "mappings",
+                  "value": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "normal": {
+                          "color": "green",
+                          "text": "\u2705 Normal"
+                        },
+                        "degraded": {
+                          "color": "yellow",
+                          "text": "\u26a0\ufe0f Degraded"
+                        },
+                        "fault": {
+                          "color": "red",
+                          "text": "\ud83d\udd34 Fault"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "health_score"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Health"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 70
+                },
+                {
+                  "id": "unit",
+                  "value": "percent"
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": null
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 60
+                      },
+                      {
+                        "color": "green",
+                        "value": 85
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "footer": {
+            "show": false
+          },
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": false,
+              "displayName": "Area"
+            }
+          ]
+        },
+        "targets": [
+          {
+            "columns": [
+              {
+                "selector": "label",
+                "text": "label",
+                "type": "string"
+              },
+              {
+                "selector": "asset_type",
+                "text": "asset_type",
+                "type": "string"
+              },
+              {
+                "selector": "area",
+                "text": "area",
+                "type": "string"
+              },
+              {
+                "selector": "operational_status",
+                "text": "operational_status",
+                "type": "string"
+              },
+              {
+                "selector": "health_score",
+                "text": "health_score",
+                "type": "number"
+              }
+            ],
+            "data": "",
+            "filters": [],
+            "format": "table",
+            "global_query_id": "",
+            "json_options": {
+              "root_is_not_array": false,
+              "columnar": false
+            },
+            "parser": "backend",
+            "refId": "A",
+            "root_selector": "",
+            "source": "url",
+            "type": "json",
+            "url": "https://terminusdb.iotdemozone.com/api/document/admin/aurora?type=Asset&unfold=true&count=50",
+            "url_options": {
+              "method": "GET",
+              "headers": [
+                {
+                  "key": "Authorization",
+                  "value": "Basic YWRtaW46OEN2N1IjTUU="
+                }
+              ]
+            }
+          }
+        ],
+        "transformations": [
+          {
+            "id": "sortBy",
+            "options": {
+              "fields": [
+                {
+                  "desc": false,
+                  "displayName": "area"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": 52,
+        "type": "table",
+        "title": "\ud83d\udd0d Active Scenario \u2014 AI Context (TerminusDB)",
+        "description": "Current PlantState from TerminusDB with active scenario, AI hint, and affected assets.",
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 56
+        },
+        "datasource": {
+          "type": "yesoreyeram-infinity-datasource",
+          "uid": "terminus-infinity"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "left",
+              "wrap": true
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "label"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Scenario"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 200
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "ai_hint"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "AI Hint"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 450
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "description"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Description"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 350
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "severity"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Severity"
+                },
+                {
+                  "id": "custom.width",
+                  "value": 80
+                },
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background-solid"
+                },
+                {
+                  "id": "mappings",
+                  "value": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "info": {
+                          "color": "blue",
+                          "text": "\u2139\ufe0f Info"
+                        },
+                        "warning": {
+                          "color": "yellow",
+                          "text": "\u26a0\ufe0f Warning"
+                        },
+                        "critical": {
+                          "color": "red",
+                          "text": "\ud83d\udd34 Critical"
+                        },
+                        "emergency": {
+                          "color": "dark-red",
+                          "text": "\ud83d\udea8 Emergency"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "footer": {
+            "show": false
+          },
+          "showHeader": true
+        },
+        "targets": [
+          {
+            "columns": [
+              {
+                "selector": "label",
+                "text": "label",
+                "type": "string"
+              },
+              {
+                "selector": "severity",
+                "text": "severity",
+                "type": "string"
+              },
+              {
+                "selector": "ai_hint",
+                "text": "ai_hint",
+                "type": "string"
+              },
+              {
+                "selector": "description",
+                "text": "description",
+                "type": "string"
+              },
+              {
+                "selector": "root_cause",
+                "text": "root_cause",
+                "type": "string"
+              }
+            ],
+            "data": "",
+            "filters": [],
+            "format": "table",
+            "global_query_id": "",
+            "json_options": {
+              "root_is_not_array": false,
+              "columnar": false
+            },
+            "parser": "backend",
+            "refId": "A",
+            "root_selector": "",
+            "source": "url",
+            "type": "json",
+            "url": "https://terminusdb.iotdemozone.com/api/document/admin/aurora?type=FaultScenario&unfold=true&count=20",
+            "url_options": {
+              "method": "GET",
+              "headers": [
+                {
+                  "key": "Authorization",
+                  "value": "Basic YWRtaW46OEN2N1IjTUU="
+                }
+              ]
+            }
+          }
+        ]
       }
     ],
     "schemaVersion": 36,
-    "version": 0,
+    "version": 1,
     "overwrite": true
   },
   "folderUid": "",
