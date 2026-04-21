@@ -96,6 +96,140 @@ def _new_batch(seq: int) -> str:
     from datetime import date
     return f"BATCH-{date.today().strftime('%Y%m%d')}-{seq:03d}"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Batch lifecycle state machine
+# ─────────────────────────────────────────────────────────────────────────────
+# Stages a batch progresses through in real plant sequence:
+#   PLANNED → RELEASED → PRESSING → PAINTING → CURING → INSPECTING → COMPLETE
+#
+# Each stage has:
+#   - name        human-readable step
+#   - line        which production line is active
+#   - duration_s  simulated wall-clock seconds per stage (compressed for demo)
+#   - target_pct  what % of batch_target_qty should be done by end of stage
+#   - topic_hint  MES/ERP UNS topic prefix that fires events in this stage
+
+BATCH_STAGES = [
+    {"name": "PLANNED",    "line": "erp",          "duration_s":  30, "target_pct":   0},
+    {"name": "RELEASED",   "line": "erp",          "duration_s":  20, "target_pct":   0},
+    {"name": "PRESSING",   "line": "line_01_assembly", "duration_s": 120, "target_pct": 35},
+    {"name": "PAINTING",   "line": "line_02_painting", "duration_s":  90, "target_pct": 65},
+    {"name": "CURING",     "line": "line_03_curing",   "duration_s":  60, "target_pct": 85},
+    {"name": "INSPECTING", "line": "line_04_inspection","duration_s": 50, "target_pct":100},
+    {"name": "COMPLETE",   "line": "erp",          "duration_s":  30, "target_pct": 100},
+]
+
+BATCH_TARGET_QTY = 200  # units per demo batch (compressed from real 1000)
+
+class BatchLifecycle:
+    """Tracks the current batch through the manufacturing stages."""
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.stage_idx      = 0          # index into BATCH_STAGES
+        self.stage_entered  = time.time()
+        self.batch_id       = _new_batch(1)
+        self.batch_seq      = 1
+        self.order_id       = "PO-010001"
+        self.work_order_id  = "WO-050001"
+        self.wo_seq         = 50001
+        self.order_seq      = 10001
+        self.target_qty     = BATCH_TARGET_QTY
+        self.units_started  = 0
+        self.units_passed   = 0
+        self.units_rework   = 0
+        self.units_scrap    = 0
+        self.dpp_triggered  = False       # set True when DPP button pressed
+        self.completed_batches: list = []  # history
+
+    @property
+    def stage(self) -> dict:
+        return BATCH_STAGES[self.stage_idx]
+
+    @property
+    def stage_name(self) -> str:
+        return self.stage["name"]
+
+    @property
+    def elapsed_in_stage(self) -> float:
+        return time.time() - self.stage_entered
+
+    @property
+    def stage_progress_pct(self) -> float:
+        return min(100.0, self.elapsed_in_stage / max(1, self.stage["duration_s"]) * 100)
+
+    @property
+    def completion_pct(self) -> float:
+        """Overall batch completion based on units vs target."""
+        return round(min(100.0, self.units_started / max(1, self.target_qty) * 100), 1)
+
+    @property
+    def batch_status(self) -> str:
+        if self.stage_name == "COMPLETE":
+            return "COMPLETE"
+        if self.stage_name in ("PLANNED", "RELEASED"):
+            return self.stage_name
+        return "IN_PROGRESS"
+
+    @property
+    def active_line(self) -> str:
+        return self.stage["line"]
+
+    def advance(self):
+        """Move to the next stage. Called automatically by the publisher loop."""
+        if self.stage_idx >= len(BATCH_STAGES) - 1:
+            self._complete_batch()
+            return
+        self.stage_idx += 1
+        self.stage_entered = time.time()
+
+    def _complete_batch(self):
+        """Archive current batch and start a fresh one."""
+        self.completed_batches.append({
+            "batch_id":      self.batch_id,
+            "order_id":      self.order_id,
+            "work_order_id": self.work_order_id,
+            "units_started": self.units_started,
+            "units_passed":  self.units_passed,
+            "units_rework":  self.units_rework,
+            "units_scrap":   self.units_scrap,
+            "completed_at":  _now(),
+            "fpy_pct":       round(self.units_passed / max(1, self.units_started) * 100, 1),
+        })
+        # Roll to next batch
+        self.batch_seq     += 1
+        self.order_seq     += 1
+        self.wo_seq        += 1
+        self.batch_id       = _new_batch(self.batch_seq)
+        self.order_id       = f"PO-{self.order_seq:06d}"
+        self.work_order_id  = f"WO-{self.wo_seq:06d}"
+        self.units_started  = 0
+        self.units_passed   = 0
+        self.units_rework   = 0
+        self.units_scrap    = 0
+        self.dpp_triggered  = False
+        self.stage_idx      = 0          # back to PLANNED
+        self.stage_entered  = time.time()
+
+    def tick(self, fault: str, unit_seq: int, scrap_count: int, rework_count: int):
+        """Called every publisher cycle. Advances stage if duration elapsed."""
+        # Update unit counts from global SIM (only during active production stages)
+        if self.stage_name in ("PRESSING", "PAINTING", "CURING", "INSPECTING"):
+            self.units_started = min(unit_seq, self.target_qty)
+            pct = self.stage["target_pct"] / 100.0
+            self.units_passed  = max(0, int(self.units_started - scrap_count - rework_count))
+            self.units_rework  = rework_count
+            self.units_scrap   = scrap_count
+        # Auto-advance unless a fault holds us in INSPECTING or PRESSING
+        if fault in ("oven_OV01_zone2_fail", "batch_quality_hold", "oven_OV01_overshoot"):
+            return  # stage frozen during quality hold
+        if self.elapsed_in_stage >= self.stage["duration_s"]:
+            self.advance()
+
+BATCH = BatchLifecycle()
+
 SIM = _SharedState()
 
 
@@ -599,40 +733,73 @@ def _erp_quality_hold(shared: dict) -> dict:
 
 def _mes_batch_tracking(shared: dict) -> dict:
     fault = shared.get("fault") or ""
+    # Use live BATCH lifecycle state
+    on_hold = fault in ("oven_OV01_zone2_fail", "batch_quality_hold", "oven_OV01_overshoot")
+    status = "ON_HOLD" if on_hold else BATCH.batch_status
+    stage  = BATCH.stage_name
+
+    # Stage-specific active line context
+    line_activity = {
+        "PLANNED":    {"active_line": "erp",              "active_operation": "ORDER_PLANNING"},
+        "RELEASED":   {"active_line": "erp",              "active_operation": "MATERIAL_STAGING"},
+        "PRESSING":   {"active_line": "line_01_assembly", "active_operation": "PRESS_STAMP"},
+        "PAINTING":   {"active_line": "line_02_painting", "active_operation": "SPRAY_COAT"},
+        "CURING":     {"active_line": "line_03_curing",   "active_operation": "OVEN_CURE"},
+        "INSPECTING": {"active_line": "line_04_inspection","active_operation": "CMM_INSPECT"},
+        "COMPLETE":   {"active_line": "erp",              "active_operation": "FINISHED_GOODS"},
+    }.get(stage, {"active_line": "unknown", "active_operation": "UNKNOWN"})
+
+    fpy = round(BATCH.units_passed / max(1, BATCH.units_started) * 100, 1)
     return {
-        "timestamp":     _now(), "source": "MES",
-        "batch_id":      SIM.current_batch,
-        "product":       SIM.current_product,
-        "order_id":      f"PO-{SIM.order_seq:06d}",
-        "work_order_id": f"WO-{SIM.wo_seq:06d}",
-        "shift":         shared.get("shift","A"),
-        "units_started": SIM.unit_seq,
-        "units_passed":  max(0, SIM.unit_seq - SIM.scrap_count - SIM.rework_count),
-        "units_rework":  SIM.rework_count,
-        "units_scrap":   SIM.scrap_count,
-        "first_pass_yield_pct": round(max(0, SIM.unit_seq-SIM.scrap_count-SIM.rework_count) / max(1,SIM.unit_seq) * 100, 1),
-        "current_step":  "PRESSING" if not fault else ("CURING" if "oven" in fault else "PAINTING"),
-        "batch_status":  "ON_HOLD" if fault in ("oven_OV01_zone2_fail","batch_quality_hold") else "IN_PROGRESS",
-        "target_qty":    1000,
-        "completion_pct":round(SIM.unit_seq/10.0,1),
-        "estimated_completion": "2026-04-17T22:00:00Z",
-        "oee_batch":     round(jitter(79 if not fault else 65, 0.03),1),
+        "timestamp":         _now(), "source": "MES",
+        "batch_id":          BATCH.batch_id,
+        "batch_seq":         BATCH.batch_seq,
+        "product":           SIM.current_product,
+        "order_id":          BATCH.order_id,
+        "work_order_id":     BATCH.work_order_id,
+        "shift":             shared.get("shift","A"),
+        "current_stage":     stage,
+        "stage_progress_pct": round(BATCH.stage_progress_pct, 1),
+        "active_line":       line_activity["active_line"],
+        "active_operation":  line_activity["active_operation"],
+        "units_started":     BATCH.units_started,
+        "units_passed":      BATCH.units_passed,
+        "units_rework":      BATCH.units_rework,
+        "units_scrap":       BATCH.units_scrap,
+        "first_pass_yield_pct": fpy,
+        "batch_status":      status,
+        "target_qty":        BATCH.target_qty,
+        "completion_pct":    BATCH.completion_pct,
+        "oee_batch":         round(jitter(79 if not fault else 65, 0.03), 1),
+        "batches_completed_today": len(BATCH.completed_batches),
     }
 
 def _mes_work_order(shared: dict) -> dict:
     fault = shared.get("fault") or ""
     mat_shortage = fault == "erp_material_shortage"
+    stage = BATCH.stage_name
+    # Map stage → operation and machine
+    op_map = {
+        "PRESSING":   ("PRESS_STAMP",   "press_PR01"),
+        "PAINTING":   ("SPRAY_COAT",    "robot_R3"),
+        "CURING":     ("OVEN_CURE",     "oven_OV01"),
+        "INSPECTING": ("CMM_INSPECT",   "vision_CMM01"),
+    }
+    operation, machine_id = op_map.get(stage, ("PRESS_STAMP", "press_PR01"))
+    downtime = round(jitter(0 if not fault else 22.5, 0.2), 1)
     return {
         "timestamp":       _now(), "source": "MES",
-        "work_order_id":   f"WO-{SIM.wo_seq:06d}",
-        "operation":       "PRESS_STAMP",
-        "machine_id":      "press_PR01",
+        "work_order_id":   BATCH.work_order_id,
+        "batch_id":        BATCH.batch_id,
+        "operation":       operation,
+        "machine_id":      machine_id,
         "operator_id":     f"OP-{random.randint(100,120):03d}",
-        "status":          "WAITING_MATERIAL" if mat_shortage else "IN_PROGRESS",
-        "start_time":      "2026-04-17T06:00:00Z",
-        "setup_time_min":  round(jitter(12.0,0.05),1),
-        "run_time_min":    round(jitter(480.0,0.01),1),
-        "downtime_min":    round(jitter(0 if not fault else 22.5, 0.2),1),
+        "status":          "WAITING_MATERIAL" if mat_shortage else ("ON_HOLD" if fault in ("oven_OV01_zone2_fail","batch_quality_hold") else "IN_PROGRESS"),
+        "current_stage":   stage,
+        "start_time":      _now(),
+        "setup_time_min":  round(jitter(12.0, 0.05), 1),
+        "run_time_min":    round(jitter(480.0, 0.01), 1),
+        "downtime_min":    downtime,
         "downtime_reason": None if not fault else "Equipment fault",
         "tooling_id":      "DIE-PR01-ALU-V3",
         "program_id":      "PROG-PR01-BAT-CASE-v7",

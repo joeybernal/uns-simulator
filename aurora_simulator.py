@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-from aurora_model import STREAMS, FAULT_SCENARIOS, STREAM_BY_ID, SIM
+from aurora_model import STREAMS, FAULT_SCENARIOS, STREAM_BY_ID, SIM, BATCH, BATCH_STAGES
 
 MQTT_HOST   = os.getenv("MQTT_HOST",   "mqtt.iotdemozone.com")
 MQTT_PORT   = int(os.getenv("MQTT_PORT",   "1883"))
@@ -142,19 +142,58 @@ def _publisher(loop):
                     "asset_id":stream.get("asset_id",""),"asset_type":stream.get("asset_type",""),
                     "value":STATE.stream_values.get(sid,""),"ts":time.strftime("%H:%M:%S")}),loop)
             _next_pub[sid]=now+stream["interval"]+random.uniform(-0.2,0.2)
-        # DPP manual trigger
+        # Tick batch lifecycle every cycle
+        fault = STATE.get_shared().get("fault") or ""
+        BATCH.tick(fault, SIM.unit_seq, SIM.scrap_count, SIM.rework_count)
+        # DPP manual trigger — fire rich batch-complete event
         if STATE.dpp_pending:
             STATE.dpp_pending=False
-            dpp_payload={"timestamp":__import__('datetime').datetime.utcnow().isoformat()+"Z",
-                "event":"dpp_triggered","batch_id":SIM.current_batch,
-                "product":SIM.current_product,"triggered_by":"manual_demo",
-                "unit_count":SIM.unit_seq}
+            import datetime as _dt
+            dpp_payload={
+                "timestamp": _dt.datetime.utcnow().isoformat()+"Z",
+                "event":     "batch_complete_dpp",
+                "triggered_by": "manual_demo",
+                # Batch identity
+                "batch_id":       BATCH.batch_id,
+                "batch_seq":      BATCH.batch_seq,
+                "order_id":       BATCH.order_id,
+                "work_order_id":  BATCH.work_order_id,
+                "product":        SIM.current_product,
+                "customer_id":    "BMW-GROUP-DE",
+                # Batch statistics
+                "units_started":  BATCH.units_started,
+                "units_passed":   BATCH.units_passed,
+                "units_rework":   BATCH.units_rework,
+                "units_scrap":    BATCH.units_scrap,
+                "fpy_pct":        round(BATCH.units_passed / max(1,BATCH.units_started)*100,1),
+                # Manufacturing provenance
+                "manufacturing_plant": "DE-LEIPZIG-01",
+                "production_line":     "line_01_to_04",
+                "shift":               SIM.shift,
+                # Compliance & traceability
+                "standard":            "ISO 27553 / EU Battery Regulation 2023/1542",
+                "material_cert":       f"CERT-ALU-{SIM.unit_seq:06d}",
+                "process_params_hash": f"sha256:{SIM.unit_seq:08x}",
+                "traceability_url":    f"https://dpp.aurora-industries.de/batch/{BATCH.batch_id}",
+                # Completed batches today
+                "batches_completed_today": len(BATCH.completed_batches),
+            }
+            # Publish to DPP topic
             if STATE.mqtt_connected:
-                mqtt_client.publish("aurora/line_04_inspection/cell_02/process/step_status",
-                    json.dumps({**dpp_payload,"step":"inspection","status":"complete","result":"pass"}),qos=1)
+                mqtt_client.publish(
+                    f"aurora/line_04_inspection/cell_02/process/batch_complete",
+                    json.dumps(dpp_payload), qos=1)
+                # Also fire step_status for each line stage
+                for stage in ["PRESSING","PAINTING","CURING","INSPECTING"]:
+                    mqtt_client.publish(
+                        f"aurora/line_04_inspection/cell_02/process/step_status",
+                        json.dumps({**dpp_payload, "step": stage.lower(), "status": "complete"}),
+                        qos=0)
             STATE.dpp_history.append(dpp_payload)
             if loop and EVENT_QUEUE:
                 asyncio.run_coroutine_threadsafe(EVENT_QUEUE.put({"type":"dpp_triggered",**dpp_payload}),loop)
+            # Advance batch to next cycle after DPP
+            BATCH.advance()
         time.sleep(0.04)
 
 # ── InfluxDB line-protocol writer ─────────────────────────────────────────────
@@ -383,10 +422,39 @@ async def set_scenario(scenario_id:str):
 
 @app.post("/api/trigger_dpp")
 async def trigger_dpp():
-    """Manual DPP trigger — for demo use only. Fires the batch-complete event."""
+    """Manual DPP trigger — fires rich batch-complete + DPP passport event."""
     STATE.dpp_pending=True
-    return {"ok":True,"message":f"DPP trigger queued for batch {SIM.current_batch}",
-            "batch_id":SIM.current_batch,"product":SIM.current_product}
+    return {"ok":True,"message":f"DPP trigger queued for batch {BATCH.batch_id}",
+            "batch_id":BATCH.batch_id,"order_id":BATCH.order_id,
+            "work_order_id":BATCH.work_order_id,"current_stage":BATCH.stage_name,
+            "units_started":BATCH.units_started,"units_passed":BATCH.units_passed,
+            "fpy_pct":round(BATCH.units_passed/max(1,BATCH.units_started)*100,1),
+            "product":SIM.current_product}
+
+@app.get("/api/batch_status")
+async def batch_status():
+    """Live batch lifecycle — stage, progress, unit counts, completed history."""
+    return {
+        "batch_id":           BATCH.batch_id,
+        "batch_seq":          BATCH.batch_seq,
+        "order_id":           BATCH.order_id,
+        "work_order_id":      BATCH.work_order_id,
+        "current_stage":      BATCH.stage_name,
+        "stage_progress_pct": round(BATCH.stage_progress_pct,1),
+        "active_line":        BATCH.active_line,
+        "batch_status":       BATCH.batch_status,
+        "units_started":      BATCH.units_started,
+        "units_passed":       BATCH.units_passed,
+        "units_rework":       BATCH.units_rework,
+        "units_scrap":        BATCH.units_scrap,
+        "target_qty":         BATCH.target_qty,
+        "completion_pct":     BATCH.completion_pct,
+        "fpy_pct":            round(BATCH.units_passed/max(1,BATCH.units_started)*100,1),
+        "dpp_triggered":      BATCH.dpp_triggered,
+        "product":            SIM.current_product,
+        "stages":             [{"name":s["name"],"line":s["line"],"duration_s":s["duration_s"]} for s in BATCH_STAGES],
+        "completed_batches":  BATCH.completed_batches[-5:],
+    }
 
 @app.get("/api/dpp_history")
 async def dpp_history(): return {"history":STATE.dpp_history}
