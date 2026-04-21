@@ -1,0 +1,18 @@
+[project]
+name = "uns-simulator"
+version = "1.0.0"
+description = "Aurora Industries UNS Simulator — realistic factory data with fault injection"
+requires-python = ">=3.11"
+dependencies = [
+    "paho-mqtt>=2.1.0",
+    "python-dotenv>=1.0.0",
+    "structlog>=24.1.0",
+    "pyyaml>=6.0.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

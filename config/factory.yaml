@@ -1,0 +1,152 @@
+# Aurora Industries Factory Configuration
+# ────────────────────────────────────────
+# All timing in seconds unless noted.
+
+factory:
+  name: "Aurora Industries — Plant 1"
+  location: "Leipzig, Germany"
+  product: "BAT-CASE-AL-001"
+  shift_duration_s: 28800      # 8 hours
+  target_throughput_per_shift: 1800
+  batch_size: 50               # units per batch
+
+mqtt:
+  host: "${MQTT_HOST:localhost}"
+  port: 1883
+  username: "${MQTT_USERNAME:}"
+  password: "${MQTT_PASSWORD:}"
+  client_id: "aurora-simulator"
+  qos: 0
+
+simulation:
+  tick_s: 5                    # global telemetry interval
+  slow_tick_s: 30              # performance/energy/health interval
+  alarm_tick_s: 60             # alarm evaluation interval
+  fault_probability_per_hour: 0.15   # 15% chance of a fault event per asset per hour
+  auto_recover: true           # faults auto-clear after recovery_time_s
+  recovery_time_s: 300         # 5 minutes to recover from a fault
+
+lines:
+  line_01_assembly:
+    cells:
+      cell_01:
+        assets:
+          press_PR01:
+            type: press
+            nominal_force_kn: 750
+            nominal_pressure_bar: 210
+            nominal_oil_temp_c: 50
+            cycle_time_s: 8
+            faults:
+              - hydraulic_pressure_low
+              - oil_overtemperature
+              - seal_leak
+              - press_force_deviation
+          conveyor_CV01:
+            type: conveyor
+            nominal_speed_ms: 2.0
+            faults:
+              - belt_slip
+              - motor_overload
+              - jam
+          robot_R1:
+            type: robot
+            task: Welding
+            faults:
+              - position_error
+              - teach_point_drift
+      cell_02:
+        assets:
+          press_PR02:
+            type: press
+            nominal_force_kn: 750
+            nominal_pressure_bar: 210
+            nominal_oil_temp_c: 50
+            cycle_time_s: 8
+            faults:
+              - hydraulic_pressure_low
+              - oil_overtemperature
+              - seal_leak
+              - press_force_deviation
+          conveyor_CV02:
+            type: conveyor
+            nominal_speed_ms: 1.5
+            faults:
+              - belt_slip
+              - motor_overload
+          robot_R2:
+            type: robot
+            task: MaterialHandling
+            faults:
+              - position_error
+              - collision
+
+  line_02_painting:
+    cells:
+      cell_01:
+        assets:
+          sprayer_SP02:
+            type: sprayer
+            nominal_pressure_bar: 3.5
+            faults:
+              - filter_blocked
+              - pressure_drop
+              - nozzle_clog
+          conveyor_CV03:
+            type: conveyor
+            nominal_speed_ms: 0.8
+            faults:
+              - belt_slip
+              - motor_overload
+          robot_R3:
+            type: robot
+            task: SprayPositioning
+            faults:
+              - position_error
+              - teach_point_drift
+
+  line_03_curing:
+    cells:
+      cell_01:
+        assets:
+          oven_OV01:
+            type: oven
+            zones: 4
+            nominal_zone_temp_c: [180, 200, 200, 170]
+            nominal_fan_rpm: 1450
+            cycle_time_s: 1200     # 20-min cure
+            faults:
+              - zone_heater_failure
+              - fan_bearing_wear
+              - exhaust_blockage
+              - temperature_overshoot
+          conveyor_CV04:
+            type: conveyor
+            nominal_speed_ms: 0.2
+            faults:
+              - belt_slip
+              - motor_overload
+
+  line_04_inspection:
+    cells:
+      cell_01:
+        assets:
+          vision_CMM:
+            type: inspection
+            method: dimensional_vision
+            pass_rate: 0.97
+            cycle_time_s: 45
+            faults:
+              - camera_calibration_drift
+              - lighting_failure
+      cell_02:
+        assets:
+          leak_test_LT01:
+            type: inspection
+            method: leak_pressure_test
+            pass_rate: 0.99
+            cycle_time_s: 60
+            triggers_dpp: true        # ← DPP generated when batch passes here
+            faults:
+              - pressure_decay_sensor_fault
+              - fixture_seal_wear

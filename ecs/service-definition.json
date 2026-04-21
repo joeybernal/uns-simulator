@@ -1,0 +1,28 @@
+{
+  "cluster":        "pipeline-monitor",
+  "serviceName":    "uns-simulator",
+  "taskDefinition": "uns-simulator",
+  "desiredCount":   1,
+  "launchType":     "FARGATE",
+  "platformVersion": "LATEST",
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "subnets": [
+        "subnet-0246687326dffa6d3",
+        "subnet-06ab06dff7cff4267"
+      ],
+      "securityGroups": [
+        "sg-0849e8f1fa8a712c2"
+      ],
+      "assignPublicIp": "ENABLED"
+    }
+  },
+  "deploymentConfiguration": {
+    "deploymentCircuitBreaker": { "enable": false, "rollback": false },
+    "maximumPercent":        200,
+    "minimumHealthyPercent": 0
+  },
+  "schedulingStrategy": "REPLICA",
+  "enableECSManagedTags": false,
+  "propagateTags": "NONE"
+}

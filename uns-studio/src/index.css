@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; @apply bg-gray-950 text-gray-100 antialiased; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { @apply bg-gray-900; }
+  ::-webkit-scrollbar-thumb { @apply bg-gray-600 rounded-full; }
+}
+
+@layer components {
+  .card { @apply bg-gray-900 rounded-xl border border-gray-800; }
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+           bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 transition-colors;
+  }
+  .badge-PLC   { @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-950 text-blue-300; }
+  .badge-MES   { @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-950 text-purple-300; }
+  .badge-ERP   { @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-300; }
+  .badge-SCADA { @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300; }
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+.live-dot { animation: blink 1.8s ease-in-out infinite; }
