@@ -34,15 +34,7 @@
         },
         {
           "name": "AURORA_API_KEY",
-          "valueFrom": "arn:aws:secretsmanager:eu-central-1:881490131520:secret:aurora-simulator/api-key-XXXXXX:api_key::"
-        },
-        {
-          "name": "INFLUX_URL",
-          "valueFrom": "arn:aws:secretsmanager:eu-central-1:881490131520:secret:aurora-simulator/influx-url-XXXXXX:url::"
-        },
-        {
-          "name": "INFLUX_TOKEN",
-          "valueFrom": "arn:aws:secretsmanager:eu-central-1:881490131520:secret:aurora-simulator/influx-token-XXXXXX:token::"
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:881490131520:secret:aurora-simulator/api-key-hauld3"
         }
       ],
       "stopTimeout": 30,
