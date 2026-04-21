@@ -567,6 +567,64 @@ async def batch_status():
 @app.get("/api/dpp_history")
 async def dpp_history(): return {"history":STATE.dpp_history}
 
+@app.get("/api/predemo")
+async def predemo_check():
+    """Run pre-demo health check: verify all 4 systems and reset scenario to normal."""
+    results = {}
+
+    # 1. Simulator self-check (always passes if we're here)
+    results["simulator"] = {
+        "ok":     STATE.running and STATE.mqtt_connected,
+        "detail": f"running={STATE.running} mqtt={STATE.mqtt_connected} streams={len(STREAMS)}",
+    }
+
+    # 2. TerminusDB PlantState
+    if TERMINUS_URL and TERMINUS_PASS:
+        try:
+            loop = asyncio.get_event_loop()
+            def _check_terminus():
+                import urllib.request, urllib.error, base64, json as _json
+                url = f"{TERMINUS_URL}/api/document/{TERMINUS_TEAM}/{TERMINUS_DB}?type=PlantState"
+                req = urllib.request.Request(url)
+                creds = base64.b64encode(f"{TERMINUS_USER}:{TERMINUS_PASS}".encode()).decode()
+                req.add_header("Authorization", f"Basic {creds}")
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    text = resp.read().decode()
+                for line in text.strip().split("\n"):
+                    if line.strip().startswith("{"):
+                        d = _json.loads(line)
+                        return {"ok": True, "detail": f"active_scenario={d.get('active_scenario','?').split('/')[-1]}"}
+                return {"ok": False, "detail": "no PlantState document found"}
+            results["terminusdb"] = await loop.run_in_executor(None, _check_terminus)
+        except Exception as e:
+            results["terminusdb"] = {"ok": False, "detail": str(e)[:120]}
+    else:
+        results["terminusdb"] = {"ok": None, "detail": "not configured (TERMINUS_URL not set)"}
+
+    # 3. Grafana health
+    try:
+        loop = asyncio.get_event_loop()
+        def _check_grafana():
+            import urllib.request, json as _json
+            req = urllib.request.Request("https://grafana.iotdemozone.com/api/health")
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                d = _json.loads(resp.read().decode())
+                return {"ok": d.get("database") == "ok", "detail": f"database={d.get('database')} version={d.get('version','')}"}
+        results["grafana"] = await loop.run_in_executor(None, _check_grafana)
+    except Exception as e:
+        results["grafana"] = {"ok": False, "detail": str(e)[:120]}
+
+    # 4. Reset scenario to normal
+    old = STATE.active_scenario
+    STATE.active_scenario = "normal"
+    sc = FAULT_SCENARIOS.get("normal", {})
+    await WS_MGR.broadcast({"type": "scenario_change", "scenario": "normal", "label": sc.get("label","Normal"), "affected": []})
+    asyncio.create_task(_update_terminus_scenario(old, "normal"))
+    results["reset"] = {"ok": True, "detail": "scenario reset to normal"}
+
+    all_ok = all(v["ok"] for v in results.values() if v["ok"] is not None)
+    return {"ready": all_ok, "checks": results}
+
 @app.websocket("/ws")
 async def ws_endpoint(ws:WebSocket):
     await WS_MGR.connect(ws)
