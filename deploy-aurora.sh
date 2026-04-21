@@ -24,7 +24,7 @@ CODEBUILD_PROJECT="aurora-simulator-build"
 # Network  (reuse same VPC / SGs as uns-simulator)
 TASK_SG="sg-0c247596e42e0d4a7"
 SUBNETS="subnet-0246687326dffa6d3,subnet-06ab06dff7cff4267"
-TG_ARN="arn:aws:elasticloadbalancing:eu-central-1:881490131520:targetgroup/aurora-simulator-tg/PLACEHOLDER"
+TG_ARN="arn:aws:elasticloadbalancing:eu-central-1:881490131520:targetgroup/aurora-simulator-tg/6b80871495f84342"
 
 # Domains
 BACKEND_DOMAIN="aurora-api.iotdemozone.com"

@@ -30,11 +30,7 @@ LOG_GROUP="/ecs/aurora-simulator"
 SECRET_NAME="aurora-simulator/mqtt-pass"
 
 # VPC / network — same as uns-simulator
-VPC_ID="$(aws ec2 describe-vpcs --region $REGION \
-  --filters "Name=isDefault,Values=false" \
-  --query 'Vpcs[0].VpcId' --output text 2>/dev/null || \
-  aws ec2 describe-vpcs --region $REGION \
-  --query 'Vpcs[0].VpcId' --output text)"
+VPC_ID="vpc-056f9780858233091"
 
 SUBNETS="subnet-0246687326dffa6d3,subnet-06ab06dff7cff4267"
 TASK_SG="sg-0c247596e42e0d4a7"
