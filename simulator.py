@@ -152,8 +152,9 @@ class ConnectionManager:
         return len(self._clients)
 
 
-WS_MGR      = ConnectionManager()
-EVENT_QUEUE: Optional[asyncio.Queue] = None  # set in lifespan
+WS_MGR        = ConnectionManager()
+EVENT_QUEUE:  Optional[asyncio.Queue] = None  # set in lifespan
+_BACKGROUND_TASKS: set = set()  # keep strong refs so tasks aren't GC'd
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MQTT — loop_forever in its own thread for reliable auto-reconnect
@@ -638,7 +639,10 @@ async def set_scenario(scenario_id: str):
     })
     print(f"[api] scenario → {scenario_id}")
     # Sync to TerminusDB (non-blocking, best-effort)
-    asyncio.create_task(_update_terminus_scenario(old_scenario, scenario_id))
+    # Keep a strong reference so the task isn't garbage-collected before it runs
+    task = asyncio.create_task(_update_terminus_scenario(old_scenario, scenario_id))
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
     return {"ok": True, "scenario": scenario_id}
 
 
