@@ -1,0 +1,720 @@
+{
+  "folderUid": "aurora",
+  "overwrite": true,
+  "dashboard": {
+    "uid": "aurora-mes-batch",
+    "title": "8. MES / Batch Lifecycle & DPP",
+    "tags": ["aurora", "mes", "batch", "erp", "dpp"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": { "from": "now-15m", "to": "now" },
+    "schemaVersion": 38,
+    "panels": [
+
+      {
+        "id": 1,
+        "type": "stat",
+        "gridPos": { "h": 3, "w": 4, "x": 0, "y": 0 },
+        "title": "Current Batch ID",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "fixed", "fixedColor": "blue" },
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"batch_id\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 2,
+        "type": "stat",
+        "gridPos": { "h": 3, "w": 4, "x": 4, "y": 0 },
+        "title": "Current Stage",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "PLANNED":    { "text": "📋 PLANNED",    "color": "gray"   } } },
+              { "type": "value", "options": { "RELEASED":   { "text": "📤 RELEASED",   "color": "blue"   } } },
+              { "type": "value", "options": { "PRESSING":   { "text": "🔨 PRESSING",   "color": "orange" } } },
+              { "type": "value", "options": { "PAINTING":   { "text": "🎨 PAINTING",   "color": "purple" } } },
+              { "type": "value", "options": { "CURING":     { "text": "🔥 CURING",     "color": "red"    } } },
+              { "type": "value", "options": { "INSPECTING": { "text": "🔍 INSPECTING", "color": "yellow" } } },
+              { "type": "value", "options": { "COMPLETE":   { "text": "✅ COMPLETE",   "color": "green"  } } }
+            ],
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"current_stage\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 3,
+        "type": "stat",
+        "gridPos": { "h": 3, "w": 4, "x": 8, "y": 0 },
+        "title": "Batch Status",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "IN_PROGRESS": { "text": "▶ IN PROGRESS", "color": "green"  } } },
+              { "type": "value", "options": { "ON_HOLD":     { "text": "⏸ ON HOLD",     "color": "red"    } } },
+              { "type": "value", "options": { "COMPLETE":    { "text": "✅ COMPLETE",    "color": "blue"   } } },
+              { "type": "value", "options": { "PLANNED":     { "text": "📋 PLANNED",     "color": "gray"   } } },
+              { "type": "value", "options": { "RELEASED":    { "text": "📤 RELEASED",    "color": "blue"   } } }
+            ],
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"batch_status\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 4,
+        "type": "gauge",
+        "gridPos": { "h": 3, "w": 4, "x": 12, "y": 0 },
+        "title": "Stage Progress %",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "minVizWidth": 75,
+          "minVizHeight": 75,
+          "orientation": "horizontal"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "blue",  "value": null },
+                { "color": "green", "value": 80 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"stage_progress_pct\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 5,
+        "type": "stat",
+        "gridPos": { "h": 3, "w": 4, "x": 16, "y": 0 },
+        "title": "Work Order ID",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "fixed", "fixedColor": "dark-blue" },
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "dark-blue", "value": null }] }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"work_order_id\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 6,
+        "type": "stat",
+        "gridPos": { "h": 3, "w": 4, "x": 20, "y": 0 },
+        "title": "Active Operation",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "fixed", "fixedColor": "orange" },
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "orange", "value": null }] }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"active_operation\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 10,
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 0, "y": 3 },
+        "title": "Units Started",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": { "mode": "fixed", "fixedColor": "blue" },
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"units_started\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 11,
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 4, "y": 3 },
+        "title": "Units Passed",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red",    "value": null },
+                { "color": "yellow", "value": 100 },
+                { "color": "green",  "value": 160 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"units_passed\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 12,
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 8, "y": 3 },
+        "title": "Units Rework",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green",  "value": null },
+                { "color": "yellow", "value": 5 },
+                { "color": "red",    "value": 15 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"units_rework\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 13,
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 12, "y": 3 },
+        "title": "Units Scrap",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green",  "value": null },
+                { "color": "yellow", "value": 3 },
+                { "color": "red",    "value": 10 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"units_scrap\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 14,
+        "type": "gauge",
+        "gridPos": { "h": 4, "w": 4, "x": 16, "y": 3 },
+        "title": "First Pass Yield %",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "minVizWidth": 75,
+          "minVizHeight": 75,
+          "orientation": "horizontal"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red",    "value": null },
+                { "color": "yellow", "value": 90 },
+                { "color": "green",  "value": 97 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"first_pass_yield_pct\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 15,
+        "type": "gauge",
+        "gridPos": { "h": 4, "w": 4, "x": 20, "y": 3 },
+        "title": "Batch Completion %",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "minVizWidth": 75,
+          "minVizHeight": 75,
+          "orientation": "horizontal"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "blue",   "value": null },
+                { "color": "green",  "value": 80 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"completion_pct\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 20,
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 7 },
+        "title": "Batch Stage Timeline",
+        "description": "Stage progress % over time — watch the line advance through PLANNED→PRESSING→PAINTING→CURING→INSPECTING→COMPLETE",
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom" },
+          "tooltip": { "mode": "multi" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "custom": { "lineWidth": 2, "fillOpacity": 15 }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"stage_progress_pct\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"completion_pct\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+          "refId": "B"
+        }]
+      },
+
+      {
+        "id": 21,
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 7 },
+        "title": "Unit Counts Over Time (Started / Passed / Rework / Scrap)",
+        "description": "Live unit counts accumulating through the batch. Rework and scrap spike during fault scenarios.",
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom" },
+          "tooltip": { "mode": "multi" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": { "lineWidth": 2, "fillOpacity": 10 }
+          },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "units_scrap" },   "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] },
+            { "matcher": { "id": "byName", "options": "units_rework" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+            { "matcher": { "id": "byName", "options": "units_passed" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
+            { "matcher": { "id": "byName", "options": "units_started" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }] }
+          ]
+        },
+        "targets": [
+          {
+            "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"units_started\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+            "refId": "A"
+          },
+          {
+            "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"units_passed\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+            "refId": "B"
+          },
+          {
+            "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"units_rework\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+            "refId": "C"
+          },
+          {
+            "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"units_scrap\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+            "refId": "D"
+          }
+        ]
+      },
+
+      {
+        "id": 30,
+        "type": "timeseries",
+        "gridPos": { "h": 7, "w": 12, "x": 0, "y": 15 },
+        "title": "First Pass Yield % — Batch History",
+        "description": "FPY trend. Drops when fault scenarios cause rework/scrap. Recovers on Reset.",
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom" },
+          "tooltip": { "mode": "single" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 50,
+            "max": 100,
+            "custom": { "lineWidth": 2, "fillOpacity": 20 },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red",    "value": null },
+                { "color": "yellow", "value": 90 },
+                { "color": "green",  "value": 97 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"first_pass_yield_pct\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 31,
+        "type": "timeseries",
+        "gridPos": { "h": 7, "w": 12, "x": 12, "y": 15 },
+        "title": "MES Work Order — Downtime Minutes",
+        "description": "Downtime accumulates when fault scenarios are active (CV01 jam, oven hold, etc.).",
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom" },
+          "tooltip": { "mode": "single" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "m",
+            "min": 0,
+            "custom": { "lineWidth": 2, "fillOpacity": 20 },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green",  "value": null },
+                { "color": "yellow", "value": 10 },
+                { "color": "red",    "value": 30 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"downtime_min\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 40,
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 0, "y": 22 },
+        "title": "ERP Order ID",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": { "mode": "fixed", "fixedColor": "dark-blue" },
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "dark-blue", "value": null }] }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"order_id\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 41,
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 4, "y": 22 },
+        "title": "ERP Order Status",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "IN_PROGRESS":       { "text": "▶ IN PROGRESS",       "color": "green"  } } },
+              { "type": "value", "options": { "BLOCKED":           { "text": "🚫 BLOCKED",           "color": "red"    } } },
+              { "type": "value", "options": { "WAITING_MATERIAL":  { "text": "⏳ WAITING MATERIAL",  "color": "orange" } } },
+              { "type": "value", "options": { "COMPLETED":         { "text": "✅ COMPLETED",         "color": "blue"   } } }
+            ],
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_erp\" and r._field == \"status\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 42,
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 8, "y": 22 },
+        "title": "Active Quality Holds",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green",  "value": null },
+                { "color": "yellow", "value": 1 },
+                { "color": "red",    "value": 2 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_erp\" and r._field == \"hold_count\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 43,
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 12, "y": 22 },
+        "title": "ALU Sheet Stock (kg)",
+        "description": "Drops below 500kg safety stock during ERP Material Shortage scenario",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "kg",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red",    "value": null },
+                { "color": "yellow", "value": 500 },
+                { "color": "green",  "value": 1000 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_erp\" and r._field == \"materials_ALU_SHEET_2MM_consumed_kg\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 44,
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 16, "y": 22 },
+        "title": "Batches Completed Today",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": { "mode": "fixed", "fixedColor": "green" },
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"batches_completed_today\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 45,
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 4, "x": 20, "y": 22 },
+        "title": "Batch OEE %",
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red",    "value": null },
+                { "color": "yellow", "value": 70 },
+                { "color": "green",  "value": 85 }
+              ]
+            }
+          }
+        },
+        "targets": [{
+          "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+          "query": "from(bucket: \"Aurora\")\n  |> range(start: -2m)\n  |> filter(fn: (r) => r._measurement == \"aurora_mes\" and r._field == \"oee_batch\")\n  |> last()",
+          "refId": "A"
+        }]
+      },
+
+      {
+        "id": 50,
+        "type": "timeseries",
+        "gridPos": { "h": 7, "w": 24, "x": 0, "y": 26 },
+        "title": "DPP Events — Batch Complete Triggers",
+        "description": "Fires when the 'Trigger DPP' button is pressed. Each spike = one batch_complete_dpp event published. Shows batch_id rolling over.",
+        "options": {
+          "legend": { "displayMode": "list", "placement": "bottom" },
+          "tooltip": { "mode": "multi" }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "lineWidth": 0,
+              "fillOpacity": 80,
+              "drawStyle": "bars",
+              "barMaxWidth": 8
+            }
+          }
+        },
+        "targets": [
+          {
+            "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_dpp\" and r._field == \"units_started\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+            "refId": "A"
+          },
+          {
+            "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_dpp\" and r._field == \"units_passed\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+            "refId": "B"
+          },
+          {
+            "datasource": { "type": "influxdb", "uid": "cfgvijnkiwk5ca" },
+            "query": "from(bucket: \"Aurora\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"aurora_dpp\" and r._field == \"fpy_pct\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)",
+            "refId": "C"
+          }
+        ]
+      }
+
+    ]
+  }
+}

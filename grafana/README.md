@@ -11,6 +11,7 @@ Live dashboards for the Aurora Industries digital twin, pulling from InfluxDB (b
 | `aurora-asset-telemetry.json` | `aurora-asset-telemetry` | 5. Aurora — Asset Telemetry |
 | `aurora-power-monitoring.json` | `aurora-power-monitoring` | 6. Aurora — Power & Energy Monitoring |
 | `aurora-faults-alarms.json` | `aurora-faults-alarms` | 7. Aurora — Faults, Alarms & Scenario History |
+| `aurora-mes-batch.json` | `aurora-mes-batch` | 8. MES / Batch Lifecycle & DPP |
 
 ## Navigation
 

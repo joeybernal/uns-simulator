@@ -48,6 +48,14 @@
         }
       },
       {
+        "id": 6, "type": "text", "gridPos": {"h": 7, "w": 8, "x": 0, "y": 10},
+        "title": "8. MES / Batch Lifecycle & DPP",
+        "options": {
+          "mode": "html",
+          "content": "<div style=\"text-align:center;padding:12px\"><div style=\"font-size:40px\">📋</div><div style=\"font-size:15px;font-weight:600;margin:8px 0 6px\">MES / Batch Lifecycle &amp; DPP</div><div style=\"color:#aaa;font-size:12px;margin-bottom:14px\">Live batch stage (PLANNED→PRESSING→CURING→COMPLETE), FPY%, unit counts, work orders, ERP status, DPP events</div><a href=\"/d/aurora-mes-batch\" style=\"display:inline-block;padding:8px 22px;background:#4a7c59;color:white;border-radius:4px;text-decoration:none;font-size:13px;font-weight:600\">Open Dashboard →</a></div>"
+        }
+      },
+      {
         "id": 10, "type": "stat", "gridPos": {"h": 4, "w": 4, "x": 0, "y": 10},
         "title": "OEE — PR01", "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "graphMode": "area"},
         "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 70}, {"color": "green", "value": 85}]}}},
@@ -88,7 +96,8 @@
       {"title": "🏭 Plant Overview",    "url": "/d/aurora-plant-overview",    "type": "link", "icon": "dashboard", "targetBlank": false, "tags": []},
       {"title": "⚙️ Asset Telemetry",  "url": "/d/aurora-asset-telemetry",   "type": "link", "icon": "dashboard", "targetBlank": false, "tags": []},
       {"title": "⚡ Power & Energy",    "url": "/d/aurora-power-monitoring",  "type": "link", "icon": "dashboard", "targetBlank": false, "tags": []},
-      {"title": "🚨 Faults & Alarms",  "url": "/d/aurora-faults-alarms",     "type": "link", "icon": "dashboard", "targetBlank": false, "tags": []}
+      {"title": "🚨 Faults & Alarms",  "url": "/d/aurora-faults-alarms",     "type": "link", "icon": "dashboard", "targetBlank": false, "tags": []},
+      {"title": "📋 MES / Batch & DPP","url": "/d/aurora-mes-batch",          "type": "link", "icon": "dashboard", "targetBlank": false, "tags": []}
     ],
     "schemaVersion": 36,
     "version": 0,
