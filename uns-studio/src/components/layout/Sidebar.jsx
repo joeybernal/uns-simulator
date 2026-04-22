@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSimStore, LOCATION_META } from '../../store/sim.store.js'
 import ScenarioModal from '../simulator/ScenarioModal.jsx'
+import DemoResetModal from '../simulator/DemoResetModal.jsx'
 import clsx from 'clsx'
 
 const LOC_ICON  = { Frankfurt: 'fa-industry', Munich: 'fa-car', Ingolstadt: 'fa-hammer' }
@@ -23,6 +24,7 @@ export default function Sidebar() {
   const setScenario    = useSimStore((s) => s.setScenario)
 
   const [previewScenario, setPreviewScenario] = useState(null)
+  const [showReset,       setShowReset]       = useState(false)
 
   const openModal = (e, sc) => {
     e.stopPropagation()
@@ -143,8 +145,21 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* External links */}
-        <div className="px-3 pb-3 border-t border-gray-800 pt-3 flex-shrink-0">
+        {/* Demo Reset + External links */}
+        <div className="px-3 pb-3 border-t border-gray-800 pt-3 flex-shrink-0 space-y-1">
+
+          {/* Demo Reset button */}
+          <button
+            onClick={() => setShowReset(true)}
+            className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium
+                       text-brand-400 hover:text-white hover:bg-brand-600/20 border border-brand-600/30
+                       hover:border-brand-500/60 transition-all"
+          >
+            <i className="fa-solid fa-rotate text-[10px]" />
+            <span className="flex-1 text-left">Demo Reset</span>
+            <i className="fa-solid fa-bolt text-[9px] opacity-50" />
+          </button>
+
           <a
             href="https://pipeline.iotdemozone.com"
             target="_blank"
@@ -169,9 +184,12 @@ export default function Sidebar() {
 
       </aside>
 
-      {/* Modal portal */}
+      {/* Modal portals */}
       {previewScenario && (
         <ScenarioModal scenario={previewScenario} onClose={closeModal} />
+      )}
+      {showReset && (
+        <DemoResetModal onClose={() => setShowReset(false)} />
       )}
     </>
   )
