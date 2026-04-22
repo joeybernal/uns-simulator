@@ -17,6 +17,13 @@ export const useSimStore = create((set, get) => ({
   uptime:         0,
   scenario:       'normal',
 
+  // ── Aurora plant state (from /api/status) ─────────────────────────────────
+  shift:          'A',           // 'A' | 'B' | 'C'
+  currentProduct: 'BAT-CASE-AL-001',
+  currentBatch:   '',
+  unitSeq:        0,
+  aiHint:         '',
+
   // ── data ──────────────────────────────────────────────────────────────────
   streams:   [],   // [{id,label,topic,area,source,source_detail,unit,interval,running,value,last_ts,pub_count,location}]
   scenarios: [],   // [{id,label,description,color,fault_key,affected,location}]
@@ -65,6 +72,12 @@ export const useSimStore = create((set, get) => ({
         feed:           data.recent_messages
                           ? [...data.recent_messages].reverse()
                           : s.feed,
+        // Aurora plant state
+        shift:          data.shift          ?? s.shift,
+        currentProduct: data.current_product ?? s.currentProduct,
+        currentBatch:   data.current_batch  ?? s.currentBatch,
+        unitSeq:        data.unit_seq       ?? s.unitSeq,
+        aiHint:         data.ai_hint        ?? s.aiHint,
       }
     })
   },

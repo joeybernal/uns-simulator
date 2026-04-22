@@ -37,6 +37,10 @@ export const api = {
   startStream: (id) => req(`/api/streams/${id}/start`, { method: 'POST' }),
   stopStream:  (id) => req(`/api/streams/${id}/stop`,  { method: 'POST' }),
   setScenario: (id) => req(`/api/scenario/${id}`,      { method: 'POST' }),
+  // Aurora-specific
+  batchStatus: ()   => req('/api/batch_status'),
+  triggerDpp:  ()   => req('/api/trigger_dpp',         { method: 'POST' }),
+  predemo:     ()   => req('/api/predemo'),
 }
 
 export function createWebSocket(onMessage) {

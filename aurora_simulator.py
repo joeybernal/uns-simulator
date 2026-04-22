@@ -133,6 +133,15 @@ def _start_mqtt():
             STATE.mqtt_connected=False; time.sleep(5)
     threading.Thread(target=_run,daemon=True,name="mqtt-aurora").start()
 
+def _derive_status(value_str: str) -> str:
+    """Derive a simple OK/WARN/ALARM status string from a stream value for the WS feed."""
+    v = str(value_str).upper()
+    if "ALARM" in v or "FAULT" in v or "ESTOP" in v or "CRITICAL" in v or "BLOCKED" in v:
+        return "ALARM"
+    if "WARN" in v or "LOW" in v or "HIGH" in v or "DEGRADED" in v or "SOON" in v:
+        return "WARN"
+    return "OK"
+
 _next_pub: Dict[str,float]={}
 
 def _publisher(loop):
@@ -159,7 +168,8 @@ def _publisher(loop):
                     "type":"message","stream_id":sid,"label":stream["label"],
                     "topic":stream["topic"],"source":stream["source"],
                     "asset_id":stream.get("asset_id",""),"asset_type":stream.get("asset_type",""),
-                    "value":STATE.stream_values.get(sid,""),"ts":time.strftime("%H:%M:%S")}),loop)
+                    "value":STATE.stream_values.get(sid,""),"ts":time.strftime("%H:%M:%S"),
+                    "status": _derive_status(STATE.stream_values.get(sid,""))}),loop)
             _next_pub[sid]=now+stream["interval"]+random.uniform(-0.2,0.2)
         # Tick batch lifecycle every cycle
         fault = STATE.get_shared().get("fault") or ""
