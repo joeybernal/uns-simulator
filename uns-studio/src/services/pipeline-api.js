@@ -7,10 +7,23 @@ const PIPELINE_API = 'https://api.iotdemozone.com'
 const SERVICE_KEY  = '636313eb95b09e9a0cc96fb80813aa9bbe01221b596478996c2034fbc56314ba'
 const SIM_API      = 'https://sim-api.iotdemozone.com'
 
+// Read the stored simulator API key from Zustand persisted state
+function _getSimApiKey() {
+  try {
+    const raw = localStorage.getItem('uns-sim-api-key')
+    if (!raw) return ''
+    const state = JSON.parse(raw)
+    return state?.state?.apiKey || ''
+  } catch {
+    return ''
+  }
+}
+
 // ── helper ────────────────────────────────────────────────────────────────────
-async function req(base, path, method = 'GET', body = null, token = null) {
+async function req(base, path, method = 'GET', body = null, { token = null, simKey = null } = {}) {
   const headers = { 'Content-Type': 'application/json' }
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  if (token)  headers['Authorization'] = `Bearer ${token}`
+  if (simKey) headers['X-API-Key'] = simKey
   const opts = { method, headers }
   if (body) opts.body = JSON.stringify(body)
   const res = await fetch(`${base}${path}`, opts)
@@ -41,7 +54,7 @@ export async function runDemoReset(onStep) {
     throw new Error(`Auth failed: ${e.message}`)
   }
 
-  const api = (method, path, body) => req(PIPELINE_API, path, method, body, token)
+  const api = (method, path, body) => req(PIPELINE_API, path, method, body, { token })
 
   // ── STEP 2 · Discover ─────────────────────────────────────────────────────
   sec('Discovering flows & locations…')
@@ -69,9 +82,11 @@ export async function runDemoReset(onStep) {
         confirm_deletion: true,
       })
       totalDeleted += r?.data?.deleted_count || 0
-    } catch {}
+    } catch (e) {
+      warn(`Anomaly bulk flush (${sev}): ${e.message}`)
+    }
   }
-  ok(`Flushed anomalies${totalDeleted ? ` (${totalDeleted} deleted)` : ''}`)
+  ok(`Flushed anomalies (${totalDeleted} deleted)`)
 
   // Flush quality issues via per-flow route
   let qiFlushed = 0
@@ -279,7 +294,8 @@ export async function runDemoReset(onStep) {
   // ── STEP 6 · Reset simulator scenario ────────────────────────────────────
   sec('Resetting simulator to Normal Operation…')
   try {
-    await req(SIM_API, '/api/scenario/normal', 'POST', null, null)
+    const simKey = _getSimApiKey()
+    await req(SIM_API, '/api/scenario/normal', 'POST', null, { simKey })
     ok('Simulator scenario → Normal Operation')
   } catch (e) {
     warn(`Could not reset simulator scenario: ${e.message}`)
